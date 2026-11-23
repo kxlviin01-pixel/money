@@ -685,6 +685,7 @@ function amtLive(el){const v=el.previousElementSibling;const upd=()=>{const n=nu
   el.addEventListener('input',upd);new MutationObserver(()=>{v.style.color=el.style.color}).observe(el,{attributes:true,attributeFilter:['style']});upd()}
 const moreBox=(inner,label,show)=>`<button class="more" id="moreB" style="${show?'display:none':''}"><span class="t">${label||'Más detalles'}</span><span>›</span></button><div id="moreD" style="${show?'':'display:none'}">${inner}</div>`;
 const openMore=()=>{if($('moreB')){$('moreB').style.display='none';$('moreD').style.display=''}};
+const TR_FOR=["Compras online","Sacar efectivo","Pa' ahorrar","Pagar algo","Recargar"];
 const TYPE_TITLE={out:'Nuevo gasto',in:'Nuevo ingreso',tr:'Transferencia'};
 const TYPE_COLOR={out:'var(--out)',in:'var(--in)',tr:'#6ea8ff'};
 
@@ -697,6 +698,7 @@ function txForm(t,pre){
   open(`<div class="ftitle" id="fTitle">${ed?'Editar movimiento':TYPE_TITLE[type]}</div>
   ${amtIn('fAmt',t.amt,TYPE_COLOR[type])}
   <input class="main" id="fDesc" placeholder="¿En qué?" value="${esc(t.desc)}" maxlength="60" enterkeyhint="done">
+  <div class="chips sug" id="trSug" style="display:none;justify-content:center">${TR_FOR.map(x=>`<button type="button" class="chip" data-tf="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   ${moreBox(`
   <div class="seg" id="seg" style="margin-top:14px">${[['out','Gasto'],['in','Ingreso'],['tr','Transferir']].map(([k,v])=>`<button data-t="${k}" class="${type===k?'on':''}">${v}</button>`).join('')}</div>
   <div id="fCatW"><label>Categoría</label><select id="fCat"></select><input id="fCatIn" list="inCats" placeholder="¿De dónde salió?" maxlength="40" value="${t.type==='in'&&t.cat!==NOCAT?esc(t.cat):''}"><datalist id="inCats">${inCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
@@ -710,10 +712,14 @@ function txForm(t,pre){
       $('fCatW').style.display=k==='tr'?'none':'';$('fToW').style.display=k==='tr'?'':'none';$('lAcc').textContent=k==='tr'?'Desde':'Cuenta';
       if($('fRepW'))$('fRepW').style.display=k==='tr'?'none':'';
       if(!ed)$('fTitle').textContent=TYPE_TITLE[k];
+      /* Transferencia: pregunta pa' qué es y da opciones rápidas */
+      $('fDesc').placeholder=k==='tr'?"¿Pa' qué es?":k==='in'?'¿Qué fue?':'¿En qué?';
+      $('trSug').style.display=k==='tr'?'':'none';
       if(k==='tr')openMore();
       $('fCat').style.display=k==='in'?'none':'';$('fCatIn').style.display=k==='in'?'':'none';
       const list=[NOCAT,...CAT_OUT];$('fCat').innerHTML=opts(list,list.includes(t.cat)?t.cat:NOCAT);$('fAmt').style.color=TYPE_COLOR[k]};
     setT(type);
+    $('trSug').onclick=e=>{const b=e.target.closest('[data-tf]');if(!b)return;$('fDesc').value=b.dataset.tf;$('trSug').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b))};
     $('seg').onclick=e=>{const b=e.target.closest('button');b&&setT(b.dataset.t)};
     $('fCat').onchange=()=>catSet=true;$('fCatIn').oninput=()=>catSet=true;
     
