@@ -116,6 +116,17 @@ nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;st
 .hero{background:linear-gradient(150deg,rgba(61,220,151,.16),rgba(255,255,255,.04) 55%,rgba(110,168,255,.08))!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 12px 40px rgba(0,0,0,.35)}
 .qa button{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.025))!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
 .icb{background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.1)!important}
+/* El mismo vidrio en todas las secciones: tarjetas, buscador, chips y flechas de mes */
+.card{background:linear-gradient(160deg,rgba(255,255,255,.075),rgba(255,255,255,.025));border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.09),0 8px 28px rgba(0,0,0,.22);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%)}
+.card.warn{background:linear-gradient(160deg,rgba(255,203,107,.14),rgba(255,203,107,.04));border-color:rgba(255,203,107,.28)}
+main input,main .mbtn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+main input:focus{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2)}
+main .chip{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+main .chip.on{background:var(--ink);border-color:var(--ink)}
+.mhead button{background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.1)!important}
+.btn.ghost{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.ic{background:rgba(255,255,255,.07)}
+.bar{background:rgba(255,255,255,.08)}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
