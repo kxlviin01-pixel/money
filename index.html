@@ -261,6 +261,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
+const APP_VER=27; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -531,7 +532,8 @@ function rInicio(){
   <h2>Respaldo</h2>
   ${oldBk?`<div class="card warn" style="margin-bottom:10px;font-size:14px">${S.lastBackup?'Hace más de 2 semanas no haces un respaldo.':'Aún no has hecho ningún respaldo.'} Si pierdes el celular o borras Chrome, se pierden tus datos.</div>`:''}
   <div class="two"><button class="btn ghost" id="exp">Exportar</button><button class="btn ghost" id="imp">Importar</button></div>
-  <p class="mute" style="margin-top:8px">${S.lastBackup?'Último respaldo: '+new Date(S.lastBackup).toLocaleDateString('es-CO',{day:'numeric',month:'long'})+'. ':''}Tus datos se guardan solo en este dispositivo.</p>`;
+  <p class="mute" style="margin-top:8px">${S.lastBackup?'Último respaldo: '+new Date(S.lastBackup).toLocaleDateString('es-CO',{day:'numeric',month:'long'})+'. ':''}Tus datos se guardan solo en este dispositivo.</p>
+  <p class="mute" style="text-align:center;font-size:11px;margin-top:18px;opacity:.6">Money · versión ${APP_VER}</p>`;
 }
 
 function movList(){
