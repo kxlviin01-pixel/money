@@ -11,14 +11,15 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root{color-scheme:dark;accent-color:#3ddc97;--bg:#0b0b0d;--card:#151518;--line:#232328;--ink:#f2f2f4;--mute:#8a8a93;--in:#3ddc97;--out:#ff6b6b;--acc:#3ddc97;--r:16px}
+:root{color-scheme:dark;accent-color:#3ddc97;--glass:rgba(255,255,255,.045);--glass-b:rgba(255,255,255,.09);--bg:#0b0b0d;--card:#151518;--line:#232328;--ink:#f2f2f4;--mute:#8a8a93;--in:#3ddc97;--out:#ff6b6b;--acc:#3ddc97;--r:16px}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
-body{padding:env(safe-area-inset-top) 0 calc(84px + env(safe-area-inset-bottom))}
-main{max-width:560px;margin:0 auto;padding:18px 16px 72px}
+html{background:var(--bg)}
+html,body{color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+body{padding:env(safe-area-inset-top) 0 calc(96px + env(safe-area-inset-bottom));min-height:100vh;background:radial-gradient(70% 45% at 0% 0%,rgba(61,220,151,.16),transparent 70%),radial-gradient(60% 40% at 100% 35%,rgba(110,168,255,.12),transparent 70%),radial-gradient(70% 45% at 40% 100%,rgba(199,146,234,.1),transparent 70%),var(--bg);background-attachment:fixed}
+main{max-width:560px;margin:0 auto;padding:18px 16px 24px}
 h1{font-size:22px;font-weight:600;margin:6px 0 16px}
 h2{font-size:14px;font-weight:500;color:var(--mute);margin:22px 0 10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card{background:var(--glass);border:1px solid var(--glass-b);border-radius:var(--r);padding:16px}
 .big{font-size:clamp(32px,10vw,44px);font-weight:600;letter-spacing:-.02em;white-space:nowrap}
 .mute{color:var(--mute);font-size:13px}
 .row{display:flex;gap:10px;align-items:center}
@@ -54,16 +55,14 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 6px}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b1f;border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;background:none;color:var(--mute);padding:10px;border-radius:9px}
 .seg button.on{background:var(--card);color:var(--ink)}
-nav{position:fixed;left:0;right:0;bottom:0;background:rgba(11,11,13,.92);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:5}
+nav{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));max-width:536px;margin:0 auto;background:rgba(22,22,26,.55);border:1px solid rgba(255,255,255,.1);border-radius:26px;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.45);display:flex;justify-content:space-around;padding:4px;z-index:5}
 nav button{flex:1;min-width:0;border:0;background:none;color:var(--mute);font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;min-height:48px}
 nav button.on{color:var(--ink)}
 nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.fab{position:fixed;right:max(18px,calc(50% - 262px));bottom:calc(80px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;border:1px solid rgba(61,220,151,.55);background:rgba(61,220,151,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--acc);font-size:28px;line-height:1;z-index:6;transition:transform .2s,opacity .2s}
-.fab.hid{transform:translateY(24px) scale(.8);opacity:0;pointer-events:none}
 /* Hoja que sube desde abajo: el fondo se oscurece suave, se arrastra con el dedo y lo de atrás no se mueve */
 .sheet{position:fixed;inset:0;background:rgba(0,0,0,0);display:flex;align-items:flex-end;z-index:10;visibility:hidden;transition:background .3s ease,visibility 0s linear .38s;overscroll-behavior:contain;touch-action:none}
 .sheet.show{visibility:visible;background:rgba(0,0,0,.6);transition:background .3s ease,visibility 0s}
-.panel{background:#111114;width:100%;max-width:560px;margin:0 auto;border-radius:24px 24px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;transform:translateY(105%);transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 40px rgba(0,0,0,.4)}
+.panel{background:rgba(20,20,24,.82);border-top:1px solid rgba(255,255,255,.1);width:100%;max-width:560px;margin:0 auto;border-radius:24px 24px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;transform:translateY(105%);transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 40px rgba(0,0,0,.4)}
 .sheet.show .panel{transform:none}
 .panel.drag{transition:none}
 .grab{width:40px;height:5px;background:#3a3a40;border-radius:5px;margin:0 auto;box-sizing:content-box;padding:6px 40px 14px;background-clip:content-box;cursor:grab;touch-action:none}
@@ -84,6 +83,39 @@ nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;st
 .mgrid .chip.now:not(.on){border-color:var(--acc);color:var(--acc)}
 .mgrid .chip:disabled{opacity:.25}
 .mhead button:disabled{opacity:.25}
+/* Selectores propios */
+.fxd{display:none!important}
+.fx{border:1px solid var(--glass-b);border-radius:14px;background:var(--glass);overflow:hidden;transition:border-color .25s,background .25s}
+.fx.open{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.07)}
+.fld{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--ink);padding:13px 14px;min-height:50px;font-size:16px;text-align:left}
+.fld .v{flex:1;display:flex;align-items:center;gap:8px}
+.fld .chev{color:var(--mute);transition:transform .3s cubic-bezier(.22,1,.36,1)}
+.fx.open .chev{transform:rotate(90deg)}
+.fo{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.22,1,.36,1)}
+.fx.open .fo{grid-template-rows:1fr}
+.foi{overflow:hidden;padding:0 10px}
+.fx.open .foi{padding:0 10px 10px}
+.olist{display:grid;gap:2px;max-height:260px;overflow-y:auto;overscroll-behavior:contain}
+.opt{display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--ink);padding:12px 10px;border-radius:10px;font-size:15px;text-align:left;min-height:44px;transition:background .15s}
+.opt .t{flex:1}.opt.on{background:rgba(255,255,255,.08)}.opt:active{background:rgba(255,255,255,.12)}
+.ck{color:var(--acc);font-weight:600}
+.calh{display:flex;align-items:center;justify-content:space-between;padding:4px 0 8px}
+.calh button{background:rgba(255,255,255,.06);border:0;color:var(--ink);width:36px;height:36px;border-radius:10px;font-size:16px}
+.calh button:disabled{opacity:.25}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dw{text-align:center;font-size:11px;color:var(--mute);padding:4px 0}
+.dd{aspect-ratio:1;border:0;background:none;color:var(--ink);border-radius:50%;font-size:14px;transition:background .15s,transform .15s}
+.dd:active{transform:scale(.9)}.dd.now:not(.on){color:var(--acc);font-weight:600}.dd.on{background:var(--ink);color:var(--bg);font-weight:600}.dd:disabled{opacity:.2}
+.tg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tg .chip,.fo .chip{padding:9px 0;text-align:center;font-size:13px;color:var(--ink)}
+.fo .row .chip{padding:8px 14px}
+.chip.on{color:var(--bg)!important}
+.sug{margin-top:8px;gap:6px}.sug .chip{padding:7px 12px;font-size:13px}
+/* Vidrio (liquid glass) en lo importante */
+.glass,.hero,.qa button,nav,.icb,.dbox,.panel{backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%)}
+.hero{background:linear-gradient(150deg,rgba(61,220,151,.16),rgba(255,255,255,.04) 55%,rgba(110,168,255,.08))!important;border:1px solid rgba(255,255,255,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 12px 40px rgba(0,0,0,.35)}
+.qa button{background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.025))!important;border:1px solid rgba(255,255,255,.1)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.icb{background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.1)!important}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
@@ -91,9 +123,8 @@ input.main{margin-top:10px;text-align:center;border-color:transparent;background
 .page{display:none}.page.on{display:block;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}}
 /* Respuesta al toque, como en apps nativas */
-.btn,.chip,.qa button,.icb,.mhead button,.fab,.more,.mbtn,.seg button,.card[data-acc],.card[data-goal],.it[data-tx],.it[data-rec],.it[data-debt],button.card{transition:transform .15s ease,background .2s,color .2s,opacity .2s,border-color .2s}
+.btn,.chip,.qa button,.icb,.mhead button,.more,.mbtn,.seg button,.card[data-acc],.card[data-goal],.it[data-tx],.it[data-rec],.it[data-debt],button.card{transition:transform .15s ease,background .2s,color .2s,opacity .2s,border-color .2s}
 .btn:active,.chip:active,.qa button:active,.icb:active,.mhead button:active,.more:active,.mbtn:active,.seg button:active,button.card:active,.card[data-acc]:active,.card[data-goal]:active{transform:scale(.97)}
-.fab:active{transform:scale(.9)}
 .it[data-tx]:active,.it[data-rec]:active,.it[data-debt]:active{opacity:.6}
 nav button{transition:color .2s}
 nav button svg{transition:transform .2s}
@@ -116,12 +147,16 @@ nav button:active svg{transform:scale(.88)}
 .day{font-size:24px;font-weight:600}
 .warn{border-color:#4a3c16;background:#1d1a10}
 .dlg{align-items:center;justify-content:center;z-index:30;padding:16px}
-.dbox{background:#151518;border:1px solid var(--line);border-radius:20px;padding:20px;width:100%;max-width:360px;transform:scale(.92);opacity:0;transition:transform .3s cubic-bezier(.22,1.3,.36,1),opacity .2s}
+.dbox{background:rgba(26,26,30,.8);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:20px;width:100%;max-width:360px;transform:scale(.92);opacity:0;transition:transform .3s cubic-bezier(.22,1.3,.36,1),opacity .2s}
 .dlg.show .dbox{transform:none;opacity:1}
 .dbox p{margin-bottom:16px;line-height:1.5}
 .dbox .yes{background:var(--out);color:#fff}
 .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--ink)}
-.chk input{width:22px;height:22px;min-height:0;accent-color:var(--acc)}
+.chk{justify-content:space-between;flex-direction:row-reverse;padding:12px 14px;border:1px solid var(--glass-b);border-radius:14px;background:var(--glass)}
+.chk input{appearance:none;-webkit-appearance:none;width:46px;height:28px;min-height:0;padding:0;border-radius:99px;background:rgba(255,255,255,.14);border:0;position:relative;flex:none;transition:background .25s;cursor:pointer}
+.chk input::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .3s cubic-bezier(.22,1.3,.36,1)}
+.chk input:checked{background:var(--acc)}
+.chk input:checked::after{transform:translateX(18px)}
 </style>
 </head>
 <body>
@@ -134,7 +169,6 @@ nav button:active svg{transform:scale(.88)}
 <section class="page" id="p-deudas"></section>
 </main>
 
-<button class="fab" id="fab" aria-label="Nuevo movimiento">+</button>
 
 <nav id="nav">
 <button data-p="inicio" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Inicio</button>
@@ -251,15 +285,24 @@ function insights(){
 const SEED=Math.random();
 const pick=a=>a[Math.floor(SEED*a.length)];
 const SALUDO={
-  vacio:['¿Qué pasa, perra? Anota el primer gasto','Quiubo, parce, arranquemos','¿Qué más? Esto está vacío, hágale'],
-  normal:['¿Qué pasa, perra?','¿Qué más, parce?','Quiubo pues','¿Bien o qué, mi llave?','Ey, ¿qué hubo?','¿Qué hay pa\' hoy?'],
-  noche:['¿Qué hace despierto, parce?','Perra, a esta hora gastando no','Ya es tarde, guarde esa tarjeta'],
-  bien:['Eso, perra, vas melo','Así sí, juicioso con la plata','Vas bien, parce, sígale así','Ahorrando como un duro','Uy, qué disciplina, mi llave'],
-  malo:['Uy no, perra, ¿qué está haciendo con la plata?','Parce, bájele dos rayitas al gasto','Ojo pues, que la billetera está llorando','Calmado, que el mes no se ha acabado','Ey, ¿y ese gastadero qué?'],
-  pasado:['Perra, ya se pasó del presupuesto','Te voló el presupuesto, parce','Presupuesto: muerto. Pilas pues']
+  vacio:["¿Qué pasa perra? Anote el primer gasto","Quiubo parce arranquemos","Ala sumercé esto está vacío","¿Qué más? Hágale pues anote algo"],
+  normal:["¿Qué pasa perra?","¿Qué más parce?","Quiubo pues","¿Bien o qué mi llave?","¿Qué hubo pues?","¿Qué hay pa' hoy?","Ala sumercé ¿qué más?","¿Qué cuenta el parcero?","¿Todo melo o qué?","Quiubo chino ¿cómo va eso?"],
+  noche:["¿Qué hace despierto parce?","Perra a esta hora gastando no","Ya es tarde guarde esa tarjeta","Sumercé ya pa' la cama","Pilas que de noche se gasta más"],
+  bien:["Eso perra vas melo","Así sí juicioso con la plata","Vas bien parce sígale así","Ahorrando como un duro","Uy qué disciplina mi llave","Qué chimba vas mejor que el mes pasado","Ala sumercé qué juicio","Eso es billete guardado"],
+  malo:["Uy no perra ¿qué hace con la plata?","Parce bájele dos rayitas al gasto","Ojo que la billetera está llorando","Calmado que el mes no se ha acabado","¿Y ese gastadero qué?","Qué boleta parce se está gastando todo","Mosca con la plata sumercé","Ala ¿y la plata pa' dónde va?","Uy qué gastadera tan berraca"],
+  pasado:["Perra ya se pasó del presupuesto","Le voló el presupuesto parce","Presupuesto muerto pilas pues","Qué boleta ya no hay presupuesto","Sumercé se comió el presupuesto"]
 };
 /* Categorías de ingreso: libres; se sugieren las que ya usaste */
 const inCats=()=>[...new Set([...S.tx.filter(t=>t.type==='in').map(t=>t.cat),...S.recurring.filter(r=>r.type==='in').map(r=>r.cat),...CAT_IN].filter(c=>c&&c!==NOCAT))];
+const MSG={
+  in:["Entró platica","Cayó billete","Llegó el biyuyo","Uy qué chimba entró plata","A la buchaca","Ese camello sí paga","Llegaron las lukas","Ala qué nota entró plata","De una cayó plata","Plata en mano sumercé","Qué chévere llegó billete","Ese billetico"],
+  inBig:["Uy cayeron palos","Ese billete está pesado","Qué chimba llegó un palo","Ala sumercé qué billetera"],
+  out:["Se fue la plata","Chao billete","Pa' fuera","Adiós lukas","Uy qué boleta otro gasto","Pilas con la plata","Se voló el biyuyo","Qué jartera pagar","Ahí va la chichigua","Mosca con los gastos","Sumercé gastando otra vez","Se fueron las lukas"],
+  outBig:["Uy se fue un palo","Qué gastadera tan berraca","Ala sumercé qué billete se fue","Esa sí dolió parce"],
+  tr:["Pasó de bolsillo","Movida la plata","Cambió de cuenta","Plata acomodada","De un bolsillo al otro"]
+};
+const moneyMsg=(type,amt)=>rnd(MSG[amt>=1e6&&MSG[type+"Big"]?type+"Big":type]);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const LISTO=['Anotado, parce','Listo, perra','Hecho, mi llave','De una','Ahí quedó'];
 const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.1 6.1C3.6 7.8 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.5 4.9-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
@@ -307,7 +350,7 @@ function rInicio(){
   <div class="card">${top.map(([c,v])=>`<div style="margin:6px 0 12px"><div class="row"><span class="grow t">${esc(c)}</span><span class="num mute">${H(v)} · ${Math.round(v/o*100)}%</span></div><div class="bar"><i style="width:${v/max*100}%;background:var(--out)"></i></div></div>`).join('')}</div>`:''}
   ${nc?`<button class="card warn row" id="nocat" style="width:100%;margin-top:22px;color:var(--ink);text-align:left;font-size:14px"><span class="grow">Tienes ${nc} ${nc===1?'movimiento':'movimientos'} sin categoría. Toca para ponérsela.</span><span>›</span></button>`:''}
   <h2 class="row"><span class="grow">Últimos movimientos</span><button class="link" data-go="mov">Ver todos</button></h2>
-  <div class="card list">${rec.length?rec.map(txItem).join(''):'<div class="empty">Toca + para registrar tu primer ingreso o gasto</div>'}</div>
+  <div class="card list">${rec.length?rec.map(txItem).join(''):'<div class="empty">Usa Gasto o Ingreso de arriba pa\' anotar lo primero</div>'}</div>
   <h2>Respaldo</h2>
   ${oldBk?`<div class="card warn" style="margin-bottom:10px;font-size:14px">${S.lastBackup?'Hace más de 2 semanas no haces un respaldo.':'Aún no has hecho ningún respaldo.'} Si pierdes el celular o borras Chrome, se pierden tus datos.</div>`:''}
   <div class="two"><button class="btn ghost" id="exp">Exportar</button><button class="btn ghost" id="imp">Importar</button></div>
@@ -394,6 +437,7 @@ const sheet=$('sheet'),panel=$('panel');
 function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;panel.scrollTop=0;panel.style.transform='';sheet.style.background='';lockBg();sheet.classList.add('show');
   panel.querySelectorAll('input[inputmode=numeric]:not([type=number])').forEach(moneyInput);
   if($('moreB'))$('moreB').onclick=openMore;
+  enhance(panel);
   bind&&bind();const f=panel.querySelector('.amt');if(f&&!f.value)setTimeout(()=>f.focus(),60)}
 /* Congela la pantalla de atrás mientras hay una hoja o un diálogo abierto */
 let lockY=null;
@@ -417,6 +461,74 @@ sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
 }
 const opts=(arr,sel)=>arr.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</option>`).join('');
 const accOpts=sel=>S.accounts.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${esc(a.name)}</option>`).join('');
+/* Selectores propios: nada de menús del sistema. Cada campo se despliega dentro del panel con el diseño de la app */
+const DOW=['D','L','M','M','J','V','S'];
+function fx(el,label,build){
+  const w=document.createElement('div');w.className='fx';
+  w.innerHTML=`<button type="button" class="fld"><span class="v t"></span><span class="chev">›</span></button><div class="fo"><div class="foi"></div></div>`;
+  el.after(w);el.classList.add('fxd');
+  const v=w.querySelector('.v'),inner=w.querySelector('.foi');
+  const api={w,set:(t)=>{v.innerHTML=t},collapse:()=>w.classList.remove('open'),
+    refresh(){v.innerHTML=label();w.style.display=el.style.display==='none'?'none':'';if(w.classList.contains('open'))inner.innerHTML=build()}};
+  w.querySelector('.fld').onclick=()=>{const was=w.classList.contains('open');panel.querySelectorAll('.fx.open').forEach(x=>x.classList.remove('open'));
+    if(!was){inner.innerHTML=build();w.classList.add('open');setTimeout(()=>w.scrollIntoView({block:'nearest',behavior:'smooth'}),180)}};
+  new MutationObserver(()=>api.refresh()).observe(el,{attributes:true,childList:true,subtree:true});
+  api.refresh();return {api,inner};
+}
+const fire=(el,ev)=>el.dispatchEvent(new Event(ev||'change',{bubbles:true}));
+function fancySelect(sel){
+  const dot=val=>{const a=S.accounts.find(x=>x.id===val);return a?`<span class="dot" style="background:${esc(a.color)}"></span>`:''};
+  const {api,inner}=fx(sel,()=>{const o=sel.options[sel.selectedIndex];return o?dot(o.value)+esc(o.text):'—'},
+    ()=>`<div class="olist">${[...sel.options].map(o=>`<button type="button" class="opt ${o.selected?'on':''}" data-v="${esc(o.value)}">${dot(o.value)}<span class="t">${esc(o.text)}</span>${o.selected?'<span class="ck">✓</span>':''}</button>`).join('')}</div>`);
+  inner.onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;sel.value=b.dataset.v;fire(sel);api.refresh();api.collapse()};
+}
+const dLabel=d=>{if(!d)return'—';const n=daysTo(d);if(n===0)return'Hoy';if(n===-1)return'Ayer';const x=new Date(d+'T12:00');const s=x.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'});return s[0].toUpperCase()+s.slice(1)};
+function fancyDate(inp){
+  let vm=(inp.value||today()).slice(0,7);
+  const {api,inner}=fx(inp,()=>dLabel(inp.value),()=>{
+    const[y,m]=vm.split('-').map(Number),first=new Date(y,m-1,1).getDay(),n=dim(vm),td=today();
+    let cells='';for(let i=0;i<first;i++)cells+='<span></span>';
+    for(let d=1;d<=n;d++){const ds=vm+'-'+pad(d);cells+=`<button type="button" class="dd ${ds===inp.value?'on':''} ${ds===td?'now':''}" data-d="${ds}" ${ds>td?'disabled':''}>${d}</button>`}
+    return`<div class="calh"><button type="button" data-cm="-1">‹</button><b>${MES[m-1][0].toUpperCase()+MES[m-1].slice(1)} ${y}</b><button type="button" data-cm="1" ${vm>=td.slice(0,7)?'disabled':''}>›</button></div>
+    <div class="cal">${DOW.map(x=>`<span class="dw">${x}</span>`).join('')}${cells}</div>
+    <div class="row" style="gap:8px;margin-top:8px"><button type="button" class="chip" data-d="${td}">Hoy</button><button type="button" class="chip" data-d="${shiftD(td,-1)}">Ayer</button></div>`});
+  inner.onclick=e=>{const c=e.target.closest('[data-cm]');if(c){vm=shiftM(vm,+c.dataset.cm);api.refresh();return}
+    const b=e.target.closest('[data-d]');if(!b||b.disabled)return;inp.value=b.dataset.d;vm=inp.value.slice(0,7);fire(inp);api.refresh();api.collapse()};
+}
+function fancyTime(inp){
+  const h12=h=>(h%12||12)+(h<12?' a. m.':' p. m.');
+  const {api,inner}=fx(inp,()=>inp.value?hora(inp.value).slice(3):'Sin hora',()=>{
+    const[h,m]=(inp.value||nowTime()).split(':').map(Number);
+    return`<div class="mute" style="font-size:12px;margin:4px 2px 8px">Hora</div><div class="tg">${Array.from({length:24},(_,i)=>`<button type="button" class="chip ${i===h&&inp.value?'on':''}" data-h="${i}">${h12(i)}</button>`).join('')}</div>
+    <div class="mute" style="font-size:12px;margin:12px 2px 8px">Minutos</div><div class="tg" style="grid-template-columns:repeat(6,1fr)">${Array.from({length:12},(_,i)=>i*5).map(x=>`<button type="button" class="chip ${inp.value&&Math.floor(m/5)*5===x?'on':''}" data-mi="${x}">${pad(x)}</button>`).join('')}</div>
+    <button type="button" class="chip" data-now style="margin-top:10px">Ahora</button>`});
+  inner.onclick=e=>{const b=e.target.closest('button');if(!b)return;const[h,m]=(inp.value||nowTime()).split(':').map(Number);
+    if(b.dataset.h!==undefined){inp.value=pad(+b.dataset.h)+':'+pad(m);fire(inp);api.refresh();return}
+    if(b.dataset.mi!==undefined)inp.value=pad(h)+':'+pad(+b.dataset.mi);
+    if(b.hasAttribute('data-now'))inp.value=nowTime();
+    fire(inp);api.refresh();api.collapse()};
+}
+function fancyDay(inp){
+  const {api,inner}=fx(inp,()=>'Día '+inp.value+' de cada mes',()=>`<div class="cal">${Array.from({length:31},(_,i)=>`<button type="button" class="dd ${+inp.value===i+1?'on':''}" data-day="${i+1}">${i+1}</button>`).join('')}</div>`);
+  inner.onclick=e=>{const b=e.target.closest('[data-day]');if(!b)return;inp.value=b.dataset.day;fire(inp);api.refresh();api.collapse()};
+}
+/* Sugerencias como chips debajo del campo (reemplaza la lista del sistema) */
+function fancyList(inp){
+  const dl=$(inp.getAttribute('list'));inp.removeAttribute('list');if(!dl)return;
+  const all=[...dl.options].map(o=>o.value);const box=document.createElement('div');box.className='chips sug';inp.after(box);
+  const draw=()=>{const q=inp.value.trim().toLowerCase();const l=all.filter(c=>!q||c.toLowerCase().includes(q)&&c.toLowerCase()!==q).slice(0,8);
+    box.innerHTML=l.map(c=>`<button type="button" class="chip" data-s="${esc(c)}">${esc(c)}</button>`).join('');box.style.display=inp.style.display==='none'||!l.length?'none':''};
+  inp.addEventListener('input',draw);new MutationObserver(draw).observe(inp,{attributes:true,attributeFilter:['style']});
+  box.onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;inp.value=b.dataset.s;fire(inp,'input');draw()};draw();
+}
+function enhance(root){
+  root.querySelectorAll('select').forEach(fancySelect);
+  root.querySelectorAll('input[type=date]').forEach(fancyDate);
+  root.querySelectorAll('input[type=time]').forEach(fancyTime);
+  root.querySelectorAll('input[data-dayof]').forEach(fancyDay);
+  root.querySelectorAll('input[list]').forEach(fancyList);
+}
+const shiftD=(d,n)=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate())};
 function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?n.toLocaleString('es-CO'):''})}
 
 /* Todos los formularios siguen el mismo orden: título pequeño → monto grande → texto principal → "Más detalles" → botón */
@@ -469,7 +581,7 @@ function txForm(t,pre){
       if(rep){const r={id:uid(),type,amt,desc:n.desc,cat:n.cat,acc:n.acc,day:+n.date.slice(8),last:n.date.slice(0,7)};S.recurring.push(r);n.rec=r.id}
       const i=S.tx.findIndex(x=>x.id===n.id);i>=0?S.tx[i]=n:S.tx.push(n);
       runRec();save();close();render();
-      toast(ed?'Cambiado, parce':rep?'Listo, se anota solo cada mes':type==='in'?'¡Entró platica! +'+fmt(amt):type==='out'?LISTO[Math.floor(Math.random()*LISTO.length)]+' · −'+fmt(amt):'Movido '+fmt(amt),type);
+      toast(ed?'Cambiado parce':rep?'Listo se anota solo cada mes':moneyMsg(type,amt)+' '+(type==='in'?'+':type==='out'?'−':'')+fmt(amt),type);
     };
     if(ed)$('fDel').onclick=()=>ask('¿Eliminar este movimiento de '+fmt(t.amt)+'? No se puede deshacer.','Eliminar',()=>{S.tx=S.tx.filter(x=>x.id!==t.id);save();close();render();toast('Eliminado')});
   });
@@ -547,7 +659,7 @@ function recForm(r,pre){
   open(`<div class="ftitle">${ed?'Editar pago fijo':'Nuevo pago fijo'}</div>
   ${amtIn('rA',r.amt,TYPE_COLOR[type])}
   <input class="main" id="rN" value="${esc(r.desc)}" placeholder="Spotify, arriendo…" maxlength="60">
-  <label>Día del mes en que se cobra</label><input id="rD" type="number" inputmode="numeric" min="1" max="31" value="${r.day}">
+  <label>Día del mes en que se cobra</label><input id="rD" type="hidden" data-dayof value="${r.day}">
   ${moreBox(`<div class="seg" id="rSeg" style="grid-template-columns:1fr 1fr;margin-top:14px"><button data-t="out" class="${type==='out'?'on':''}">Gasto</button><button data-t="in" class="${type==='in'?'on':''}">Ingreso</button></div>
   <label>Categoría</label><select id="rC"></select><input id="rCIn" list="rInCats" placeholder="¿De dónde sale?" maxlength="40" value="${r.type==='in'?esc(r.cat||''):''}"><datalist id="rInCats">${inCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
   <label>Cuenta</label><select id="rAcc">${accOpts(r.acc)}</select>
@@ -586,7 +698,6 @@ function importData(){
 
 /* Events */
 $('nav').onclick=e=>{const b=e.target.closest('button');b&&go(b.dataset.p)};
-$('fab').onclick=()=>txForm();
 document.querySelector('main').addEventListener('click',e=>{
   const g=e.target.closest('[data-go]');if(g)return go(g.dataset.go);
   const tx=e.target.closest('[data-tx]');if(tx)return txForm(S.tx.find(t=>t.id===tx.dataset.tx));
@@ -613,7 +724,6 @@ document.querySelector('main').addEventListener('change',e=>{if(e.target.id==='c
 addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 
 /* El + se esconde al bajar y vuelve al subir, para no tapar textos */
-let lastY=0;addEventListener('scroll',()=>{const y=scrollY;$('fab').classList.toggle('hid',y>lastY&&y>80);lastY=y},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&runRec())render()});
 runRec();
 render();
