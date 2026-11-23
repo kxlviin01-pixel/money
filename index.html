@@ -61,7 +61,8 @@ label{display:block;font-size:13px;color:var(--mute);margin:12px 0 6px}
 .amtw{position:relative;text-align:center;margin:2px 0 4px}
 .amtv{font-size:40px;font-weight:600;line-height:64px;min-height:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .amtv.ph{opacity:.35}
-.amtw:focus-within .amtv::after{content:"";display:inline-block;width:2px;height:36px;margin-left:3px;vertical-align:-4px;background:currentColor;border-radius:1px;animation:blink 1s steps(1) infinite}
+.amtw{cursor:pointer}
+.amtw.active .amtv::after{content:"";display:inline-block;width:2px;height:36px;margin-left:3px;vertical-align:-4px;background:currentColor;border-radius:1px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .amtw .amt,.amtw .amt:focus{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;border:0;background:none;padding:0;font-size:16px;caret-color:transparent;color:transparent}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b1f;border-radius:12px;padding:4px;gap:4px}
@@ -175,6 +176,12 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 .panel input.main{margin-top:6px}
 .panel .more{margin-top:8px}
 .panel label{margin:10px 0 5px}
+/* Teclado propio */
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 4px;max-height:240px;overflow:hidden;transition:max-height .28s cubic-bezier(.22,1,.36,1),opacity .2s,margin .28s}
+.kp.hide{max-height:0;opacity:0;margin:0;pointer-events:none}
+.kp button{height:52px;border:0;border-radius:14px;background:rgba(255,255,255,.07);color:var(--ink);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;touch-action:manipulation;transition:background .12s,transform .12s}
+.kp button:active{background:rgba(255,255,255,.18);transform:scale(.95)}
+.kp [data-k="000"]{font-size:18px}.kp [data-k="⌫"]{font-size:20px;color:var(--mute)}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
@@ -461,7 +468,7 @@ const OK={
 };
 const say=k=>rnd(OK[k]);
 /* Si falta algo, solo pide eso: marca el campo vacío con una sacudidita y lo enfoca */
-function need(el,msg){if(el&&el.closest("#moreD"))openMore();if(el){const t=el.classList.contains("amt")?el.parentNode:el;t.classList.remove("miss");void t.offsetWidth;t.classList.add("miss");el.focus()}toast(msg);return false}
+function need(el,msg){if(el&&el.closest("#moreD"))openMore();if(el){const a=el.classList.contains("amt"),t=a?el.parentNode:el;t.classList.remove("miss");void t.offsetWidth;t.classList.add("miss");if(a){if(t._show)t._show()}else el.focus()}toast(msg);return false}
 const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.1 6.1C3.6 7.8 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.5 4.9-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 function rInicio(){
@@ -653,13 +660,14 @@ function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;panel.s
   panel.querySelectorAll('input[inputmode=numeric]:not([type=number]):not(.amt)').forEach(moneyInput);
   if($('moreB'))$('moreB').onclick=openMore;
   enhance(panel);
+  panel.querySelectorAll('.amtw').forEach(numPad);
   {const k=[...panel.children];let i=k.length;while(i>0&&k[i-1].matches('.btn,.two'))i--;const tail=k.slice(i);
    if(tail.length&&tail.some(b=>b.matches('.btn:not(.ghost):not(.del)')||b.querySelector?.('.btn:not(.ghost)'))){const w=document.createElement('div');w.className='acts';tail[0].before(w);tail.forEach(b=>w.appendChild(b))}}
   panel.onkeydown=e=>{if(e.key!=='Enter'||!e.target.matches('input'))return;e.preventDefault();
-    const empty=[...panel.querySelectorAll('input.amt,input.main')].find(i=>i!==e.target&&!i.value.trim()&&i.offsetParent);
+    const empty=[...panel.querySelectorAll('input.main')].find(i=>i!==e.target&&!i.value.trim()&&i.offsetParent);
     if(empty)empty.focus();else panel.querySelector('.btn:not(.ghost):not(.del)')?.click()};
   panel.oninput=e=>e.target.closest?.('.miss')?.classList.remove('miss');
-  bind&&bind();const f=panel.querySelector('.amt');if(f&&!f.value)setTimeout(()=>{if(sheet.classList.contains('show'))f.focus()},LITE?120:380)}
+  bind&&bind();const aw=panel.querySelector('.amtw');if(aw&&!aw.querySelector('.amt').value)aw._show()}
 /* Congela la pantalla de atrás mientras hay una hoja o un diálogo abierto */
 let lockY=null;
 function lockBg(){if(lockY!==null)return;lockY=1;document.documentElement.classList.add('locked')}
@@ -667,6 +675,7 @@ function unlockBg(){if(lockY===null||sheet.classList.contains('show')||$('dlg').
 const later=fn=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(fn,LITE?60:0)));
 function close(){sheet.classList.remove('show');panel.style.transform='';sheet.style.background='';document.activeElement?.blur?.();setTimeout(unlockBg,0)}
 sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
+panel.addEventListener('focusin',e=>{if(e.target.matches('input,textarea'))panel.querySelectorAll('.amtw.active').forEach(w=>w._hide())});
 /* Arrastrar la hoja con el dedo: hacia abajo se cierra, si la sueltas antes vuelve a su sitio */
 {let sy=null,dy=0,t0=0,dragging=false;
   panel.addEventListener('touchstart',e=>{if(panel.scrollTop>2&&!e.target.closest('.grab'))return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
@@ -760,7 +769,22 @@ const shiftD=(d,n)=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+n);retur
 function moneyInput(el){el.type='tel';el.addEventListener('blur',()=>{const n=num(el.value);el.value=n?nf(n):''})}
 
 /* Todos los formularios siguen el mismo orden: título pequeño → monto grande → texto principal → "Más detalles" → botón */
-const amtIn=(id,v,color)=>`<div class="amtw"><div class="amtv num${v?'':' ph'}" style="color:${color||'var(--ink)'}">${v?'$'+nf(v):'$0'}</div><input class="amt" id="${id}" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="13" autocomplete="off" value="${v||''}" style="color:${color||'var(--ink)'}"></div>`;
+const amtIn=(id,v,color)=>`<div class="amtw"><div class="amtv num${v?'':' ph'}" style="color:${color||'var(--ink)'}">${v?'$'+nf(v):'$0'}</div><input class="amt" id="${id}" type="hidden" value="${v||''}" style="color:${color||'var(--ink)'}"></div>`;
+/* Teclado de números propio (sin # ni *): 1-9 · 000 · 0 · borrar (mantener presionado borra todo) */
+function numPad(w){
+  const inp=w.querySelector('.amt'),kp=document.createElement('div');kp.className='kp hide';
+  kp.innerHTML=['1','2','3','4','5','6','7','8','9','000','0','⌫'].map(k=>'<button type="button" data-k="'+k+'"'+(k==='⌫'?' aria-label="Borrar"':'')+'>'+k+'</button>').join('');
+  w.after(kp);
+  w._show=()=>{const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur();panel.querySelectorAll('.amtw.active').forEach(x=>{if(x!==w)x._hide()});kp.classList.remove('hide');w.classList.add('active')};
+  w._hide=()=>{kp.classList.add('hide');w.classList.remove('active')};
+  w.onclick=w._show;
+  let hold=0;
+  kp.addEventListener('pointerdown',e=>{const b=e.target.closest('[data-k]');if(!b)return;e.preventDefault();const k=b.dataset.k;let v=inp.value.replace(/\D/g,'');
+    if(k==='⌫'){v=v.slice(0,-1);clearTimeout(hold);hold=setTimeout(()=>{inp.value='';fire(inp,'input')},550)}
+    else{v=(v+k).replace(/^0+/,'');if(v.length>12)return}
+    inp.value=v;fire(inp,'input');if(navigator.vibrate)navigator.vibrate(6)});
+  const stop=()=>clearTimeout(hold);kp.addEventListener('pointerup',stop);kp.addEventListener('pointerleave',stop);kp.addEventListener('pointercancel',stop);
+}
 /* Solo actualiza el texto de arriba: así el teclado de Android no se reinicia con cada número */
 function amtLive(el){const v=el.previousElementSibling;const upd=()=>{const n=num(el.value);v.textContent=n?'$'+nf(n):'$0';v.classList.toggle('ph',!n)};
   el.addEventListener('input',upd);new MutationObserver(()=>{v.style.color=el.style.color}).observe(el,{attributes:true,attributeFilter:['style']});upd()}

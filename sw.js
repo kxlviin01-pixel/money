@@ -1,5 +1,5 @@
 // Cache de la app para que abra sin internet. Sube la versión al cambiar archivos.
-const CACHE = 'money-v19';
+const CACHE = 'money-v20';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
