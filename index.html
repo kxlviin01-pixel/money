@@ -57,8 +57,13 @@ input,select{transition:border-color .2s,background .2s}
 input:focus,select:focus{outline:none;border-color:#3a3a44;background:#202026}
 input:focus-visible,select:focus-visible{outline:none}
 label{display:block;font-size:13px;color:var(--mute);margin:12px 0 6px}
-.amt,.amt:focus{font-size:40px;font-weight:600;text-align:center;border:0;background:none;padding:6px;min-height:64px;caret-color:currentColor}
-.amt::placeholder{color:currentColor;opacity:.35}
+/* Monto grande: se ve el número bonito arriba; el campo real queda invisible encima para recibir el dedo */
+.amtw{position:relative;text-align:center;margin:2px 0 4px}
+.amtv{font-size:40px;font-weight:600;line-height:64px;min-height:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.amtv.ph{opacity:.35}
+.amtw:focus-within .amtv::after{content:"";display:inline-block;width:2px;height:36px;margin-left:3px;vertical-align:-4px;background:currentColor;border-radius:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.amtw .amt,.amtw .amt:focus{position:absolute;inset:0;width:100%;height:100%;min-height:0;opacity:0;border:0;background:none;padding:0;font-size:16px;caret-color:transparent;color:transparent}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b1f;border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;background:none;color:var(--mute);padding:10px;border-radius:9px}
 .seg button.on{background:var(--card);color:var(--ink)}
@@ -147,7 +152,7 @@ main .chip.on{background:var(--ink);border-color:var(--ink)}
 .bar{background:rgba(255,255,255,.08)}
 /* Campo que falta: sacudidita y borde rojo suave */
 .miss{animation:shake .4s cubic-bezier(.36,.07,.19,.97);border-color:rgba(255,107,107,.6)!important}
-.amt.miss{border:0!important}
+.amtw.miss{border:0!important}
 @keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 /* Fondo quieto mientras hay un panel abierto (liviano, sin mover la página) */
 html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
@@ -396,13 +401,13 @@ function insLater(){const k="ins"+today();if(MEMO.v===VER&&k in MEMO)return MEMO
 const catGuess=()=>memo("cg",()=>{const g={};for(const m of [...monthsDesc()].reverse())for(const t of sorted(ofMonth(m)).reverse())if(t.cat&&t.cat!==NOCAT&&t.desc)g[t.type+"|"+t.desc.toLowerCase()]=t.cat;return g});
 /* Mensajes de plata: muchos, bien de por aquí, sin comas. Cambian según tipo, monto y categoría */
 const MSG={
-  in:["Entró platica","Cayó billete","Llegó el biyuyo","Uy qué chimba entró plata","A la buchaca","Ese camello sí paga","Llegaron las lukas","Ala qué nota entró plata","De una cayó plata","Plata en mano sumercé","Qué chévere llegó billete","Ese billetico","Qué belleza entró plata","Pa' la alcancía","Billete fresquito","Esa plata sí se ve","Uy parce está facturando","Cayó el sencillo","La billetera va creciendo","Plata que entra no se pregunta","Facturando como un duro","Qué nota sumercé","La billetera sonríe","Plata limpiecita","Ala qué berraquera","Hágale que eso suma","Una chimba de ingreso","Eso es progreso mi llave","Llovió plata","Bendito camello","Más plata pa'l combo","Entró sin pedir permiso","De a poquito se llena","Eso parce a seguirle","Así es como es","Billetico pa' la casa","Qué orgullo parce","Plata bien ganada","Uy cómo entra","Pa' la buchaca de una"],
+  in:["Entró platica","Cayó billete","Llegó el biyuyo","Uy qué chimba entró plata","A la buchaca","Ese camello sí paga","Llegaron las lukas","Ala qué nota entró plata","De una cayó plata","Plata en mano sumercé","Qué chévere llegó billete","Ese billetico","Qué belleza entró plata","Pa' la alcancía","Billete fresquito","Esa plata sí se ve","Uy parce está facturando","Cayó el sencillo","La billetera va creciendo","Plata que entra no se pregunta","Facturando como un duro","Qué nota sumercé","La billetera sonríe","Plata limpiecita","Ala qué berraquera","Hágale que eso suma","Una chimba de ingreso","Eso es progreso mi llave","Llovió plata","Bendito camello","Más plata pa'l combo","Entró sin pedir permiso","De a poquito se llena","Eso parce a seguirle","Así es como es","Billetico pa' la casa","Qué orgullo parce","Plata bien ganada","Uy cómo entra","Pa' la buchaca de una","Camellando como un berraco","A lo bien qué nota","Bacano ese billete","Qué chimba de quincena","Ahora sí pa' las polas","La rebusca sí paga","Ese rebusque funcionó","Billete bien ganado chino","Uy está volando parce","Sumercé está rico"],
   inBig:["Uy cayeron palos","Ese billete está pesado","Qué chimba llegó un palo","Ala sumercé qué billetera","Palos en la cuenta parce","Ahora sí está montado","Ese camello paga bien bien","Uy el duro de la plata"],
   inCat:{"Tienda LUMMEN":["Vendió LUMMEN qué nota","Ese colágeno sí vende","LUMMEN facturando","Otra venta pa' LUMMEN"],"Venta":["Vendido parce","Buena esa venta","Venta cerrada de una"],"Regalo":["Qué detalle tan bonito","Regalito recibido","Alguien lo quiere parce"],"Viajes Pachón":["Ese viaje sí pagó","Pachón facturando","Viajecito bien pagado"]},
-  out:["Se fue la plata","Chao billete","Pa' fuera","Adiós lukas","Uy qué boleta otro gasto","Pilas con la plata","Se voló el biyuyo","Qué jartera pagar","Ahí va la chichigua","Mosca con los gastos","Sumercé gastando otra vez","Se fueron las lukas","Uy la billetera llora","Qué dolor parce","Ahí se fue el sencillo","Se nos fue la plata","Ala y eso","Qué gastadera","Ojo con el bolsillo","Esa plata ya no vuelve","Fue rico mientras duró","La billetera pidió auxilio","Se escapó el billete","Hágale pero con juicio","Uy qué caro todo","Platica volando","Se fue como agua","Pagado y anotado","Eso dolió un poquito","Ya se fue no llore","Pa' eso es la plata","Gasto anotado mi llave","Menos lukas más recuerdos","Bolsillo más liviano","Toca apretarse","Hasta luego billete","La plata no es pa' guardar dicen","Ay mi platica","Uy parce otra vez","Billete que se va no vuelve"],
+  out:["Se fue la plata","Chao billete","Pa' fuera","Adiós lukas","Uy qué boleta otro gasto","Pilas con la plata","Se voló el biyuyo","Qué jartera pagar","Ahí va la chichigua","Mosca con los gastos","Sumercé gastando otra vez","Se fueron las lukas","Uy la billetera llora","Qué dolor parce","Ahí se fue el sencillo","Se nos fue la plata","Ala y eso","Qué gastadera","Ojo con el bolsillo","Esa plata ya no vuelve","Fue rico mientras duró","La billetera pidió auxilio","Se escapó el billete","Hágale pero con juicio","Uy qué caro todo","Platica volando","Se fue como agua","Pagado y anotado","Eso dolió un poquito","Ya se fue no llore","Pa' eso es la plata","Gasto anotado mi llave","Menos lukas más recuerdos","Bolsillo más liviano","Toca apretarse","Hasta luego billete","La plata no es pa' guardar dicen","Ay mi platica","Uy parce otra vez","Billete que se va no vuelve","Quedó más pelado que rodilla de cabra","Uy quedó en la olla","Qué mamera pagar","Qué oso tanto gasto","Ando boleta parce","Billete que vuela","Uy qué charro ese gasto","Se fue la quincena","Hágale que la vida es una","A lo bien eso dolió"],
   outBig:["Uy se fue un palo","Qué gastadera tan berraca","Ala sumercé qué billete se fue","Esa sí dolió parce","Palo que se va","Uy eso sí pesó","Qué bajonazo","La billetera quedó temblando"],
   outSmall:["Una chichigua nomás","Eso es sencillo","Ni se siente","Gasto hormiga ojo","Poquito pero suma","Monedita anotada","Eso es nada parce","Pa' las vueltas"],
-  outCat:{"Comida":["Buen provecho parce","Barriga llena corazón contento","Qué rico ese antojo","A comer se dijo","Provecho sumercé","Qué hambre la que traía"],"Transporte":["Pa' la buseta","Buen viaje parce","Que no haya trancón","Ruedas pagadas","Llegue con bien sumercé"],"Salidas":["Que se goce la rumba","Pa' la farra","Disfrute pero con juicio","Rumba anotada","Qué nota la salida"],"Gaming / PC":["GG parce","Pa' la mesa gamer no se olvide","Más fps menos plata","Setup mejorando"],"Ropa":["Pinta nueva","Qué facha parce","Estrenando sumercé","Bien pinta"],"Salud":["La salud primero","Que se mejore parce","Eso es inversión"],"Hogar":["Pa' la casita","Casa bonita","Hogar dulce hogar"],"Suscripciones":["Otra suscripción ojo","Pa' ver series","Suscripción pagada"],"Tienda LUMMEN":["Pa'l negocio","Invirtiendo en LUMMEN","Eso vuelve con ventas"],"CK":["Anotado parce","Listo eso"]},
+  outCat:{"Comida":["Buen provecho parce","Qué rico ese chocolatico con almojábana","Ajiaco power","Una empanadita no hace daño","Corrientazo anotado","Barriga llena corazón contento","Qué rico ese antojo","A comer se dijo","Provecho sumercé","Qué hambre la que traía"],"Transporte":["Pa' la buseta","Pa'l Transmilenio","Aguante ese trancón","Que no le toque el articulado lleno","Buen viaje parce","Que no haya trancón","Ruedas pagadas","Llegue con bien sumercé"],"Salidas":["Que se goce la rumba","Pa' la farra","Disfrute pero con juicio","Rumba anotada","Qué nota la salida","A lubricar el hígado con polas","Pa' las polas parce","Una polita no le hace daño a nadie","Que no se le vaya la mano con el guaro","Rumba rola anotada","Mañana el guayabo es suyo","Salud sumercé"],"Gaming / PC":["GG parce","Pa' la mesa gamer no se olvide","Más fps menos plata","Setup mejorando"],"Ropa":["Pinta nueva","Qué facha parce","Estrenando sumercé","Bien pinta"],"Salud":["La salud primero","Que se mejore parce","Eso es inversión"],"Hogar":["Pa' la casita","Casa bonita","Hogar dulce hogar"],"Suscripciones":["Otra suscripción ojo","Pa' ver series","Suscripción pagada"],"Tienda LUMMEN":["Pa'l negocio","Invirtiendo en LUMMEN","Eso vuelve con ventas"],"CK":["Anotado parce","Listo eso"]},
   tr:["Pasó de bolsillo","Movida la plata","Cambió de cuenta","Plata acomodada","De un bolsillo al otro","Billete trasteado","Movida estratégica","La plata se mudó","Todo en orden parce","Trasteo de lukas","Acomodando el biyuyo","Plata en su sitio","Movimiento limpio","De aquí pa' allá","Ni se ganó ni se perdió","Misma plata otro bolsillo","Organizando la casa","Eso no cuenta como gasto","Plata reacomodada","Listo el trasteo"]
 };
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
@@ -413,24 +418,24 @@ function moneyMsg(type,amt,cat){
   else{const c=MSG[type+"Cat"]&&MSG[type+"Cat"][cat];if(c&&Math.random()<.6)pool=c;else if(type==="out"&&amt<5000&&Math.random()<.5)pool=MSG.outSmall}
   let m=rnd(pool);if(m===lastMsg&&pool.length>1)m=rnd(pool);lastMsg=m;return m;
 }
-/* Avisos generales: sin comas y variados */
+/* Avisos generales: sin comas, bien rolos y variados */
 const OK={
-  saved:["Anotado parce","Listo perra","Hecho mi llave","De una","Ahí quedó","Quedó guardado","Melo","Listo el pollo","Hágale","Todo bien todo bonito","Así sí","Anotadito"],
-  edited:["Cambiado parce","Listo el cambio","Corregido de una","Arreglado mi llave","Quedó como nuevo","Ya quedó bien"],
-  deleted:["Borrado","Chao con eso","Eliminado de una","Ya no existe parce","Listo se borró"],
-  debtMe:["Anotado quién le debe","Pilas cobrarle","Que no se le olvide cobrar","Ya quedó la cuenta"],
-  debtYo:["Anotado lo que debe","Pilas pagarle","Que no se le olvide pagar","Cuenta clara amistad larga"],
-  paidMe:["Ya le pagaron qué nota","Cobrado parce","Saldado de una"],
-  paidYo:["Deuda pagada qué alivio","Ya no debe nada","Saldado mi llave"],
-  goal:["Meta creada a darle","A ahorrar se dijo","Esa meta se cumple"],
-  abono:["Un pasito más","Va llenando la alcancía","Abonado mi llave","Eso suma"],
-  retiro:["Sacó de la alcancía","Retirado","Ojo con la meta"],
-  acc:["Bolsillo nuevo","Listo el bolsillo","Cuenta creada"],
-  rec:["Listo se anota solo cada mes","Pago fijo anotado","Eso ya se anota solo"]
+  saved:["Anotado parce","Listo perra","Hecho mi llave","De una","Ahí quedó","Quedó guardado","Melo","Listo el pollo","Hágale","Todo bien todo bonito","Así sí","Anotadito","A lo bien quedó","Bacano","Qué chimba quedó","Listo sumercé","Quedó al pelo","Chévere","Anotado chino","Pa' luego es tarde y ya quedó"],
+  edited:["Cambiado parce","Listo el cambio","Corregido de una","Arreglado mi llave","Quedó como nuevo","Ya quedó bien","Enderezado sumercé","Listo quedó al pelo","Corregidito","Ajustado de una","Ahora sí quedó bacano"],
+  deleted:["Borrado","Chao con eso","Eliminado de una","Ya no existe parce","Listo se borró","Pa' la caneca","Se fue pa'l olvido","Borradito sumercé","Ni rastro parce","Como si nunca hubiera pasado"],
+  debtMe:["Anotado quién le debe","Pilas cobrarle","Que no se le olvide cobrar","Ya quedó la cuenta","No sea lámpara y cóbrele","Ese billete vuelve parce","Cuentas claras chocolate espeso","Ahí quedó anotado el fiado","Anotado pa' cobrar","Que le pague o que le pague"],
+  debtYo:["Anotado lo que debe","Pilas pagarle","Que no se le olvide pagar","Cuenta clara amistad larga","Toca jalarle a pagar","Quedó en la libreta","No quede mal sumercé","Anotado el fiado","Pague que la palabra vale","Ojo que el que debe no duerme"],
+  paidMe:["Ya le pagaron qué nota","Cobrado parce","Saldado de una","Volvió el billete","Ese sí es de palabra","Qué chimba cumplió","Plata de vuelta pa' la buchaca"],
+  paidYo:["Deuda pagada qué alivio","Ya no debe nada","Saldado mi llave","Libre como el viento","Quedó a paz y salvo","Qué descanso parce","Palabra cumplida sumercé"],
+  goal:["Meta creada a darle","A ahorrar se dijo","Esa meta se cumple","Hágale que sí se puede","Paso a pasito se llega","Esa meta ya tiene dueño","A guardar como hormiguita"],
+  abono:["Un pasito más","Va llenando la alcancía","Abonado mi llave","Eso suma","La alcancía sonríe","Cada luka cuenta","Más cerquita parce","Juicioso sumercé"],
+  retiro:["Sacó de la alcancía","Retirado","Ojo con la meta","Uy le metió la mano a la alcancía","Pilas que la meta llora","Sacadito"],
+  acc:["Bolsillo nuevo","Listo el bolsillo","Cuenta creada","Otro bolsillo pa' la colección","Bolsillo listo parce"],
+  rec:["Listo se anota solo cada mes","Pago fijo anotado","Eso ya se anota solo","Ya no tiene que acordarse","Anotado pa' todos los meses","De eso me encargo yo parce"]
 };
 const say=k=>rnd(OK[k]);
 /* Si falta algo, solo pide eso: marca el campo vacío con una sacudidita y lo enfoca */
-function need(el,msg){if(el&&el.closest("#moreD"))openMore();if(el){el.classList.remove("miss");void el.offsetWidth;el.classList.add("miss");el.focus()}toast(msg);return false}
+function need(el,msg){if(el&&el.closest("#moreD"))openMore();if(el){const t=el.classList.contains("amt")?el.parentNode:el;t.classList.remove("miss");void t.offsetWidth;t.classList.add("miss");el.focus()}toast(msg);return false}
 const EYE='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const EYE_OFF='<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.1 6.1C3.6 7.8 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.5 4.9-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 function rInicio(){
@@ -566,13 +571,14 @@ function go(p){page=p;document.querySelectorAll('.page').forEach(s=>s.classList.
 /* Sheets */
 const sheet=$('sheet'),panel=$('panel');
 function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;panel.scrollTop=0;panel.style.transform='';sheet.style.background='';lockBg();sheet.classList.add('show');
-  panel.querySelectorAll('input[inputmode=numeric]:not([type=number])').forEach(moneyInput);
+  panel.querySelectorAll('input.amt').forEach(amtLive);
+  panel.querySelectorAll('input[inputmode=numeric]:not([type=number]):not(.amt)').forEach(moneyInput);
   if($('moreB'))$('moreB').onclick=openMore;
   enhance(panel);
   panel.onkeydown=e=>{if(e.key!=='Enter'||!e.target.matches('input'))return;e.preventDefault();
     const empty=[...panel.querySelectorAll('input.amt,input.main')].find(i=>i!==e.target&&!i.value.trim()&&i.offsetParent);
     if(empty)empty.focus();else panel.querySelector('.btn:not(.ghost):not(.del)')?.click()};
-  panel.oninput=e=>e.target.classList?.remove('miss');
+  panel.oninput=e=>e.target.closest?.('.miss')?.classList.remove('miss');
   bind&&bind();const f=panel.querySelector('.amt');if(f&&!f.value)setTimeout(()=>{if(sheet.classList.contains('show'))f.focus()},LITE?120:380)}
 /* Congela la pantalla de atrás mientras hay una hoja o un diálogo abierto */
 let lockY=null;
@@ -670,10 +676,13 @@ function enhance(root){
   root.querySelectorAll('input[list]').forEach(fancyList);
 }
 const shiftD=(d,n)=>{const x=new Date(d+'T12:00');x.setDate(x.getDate()+n);return x.getFullYear()+'-'+pad(x.getMonth()+1)+'-'+pad(x.getDate())};
-function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?nf(n):''})}
+function moneyInput(el){el.addEventListener('blur',()=>{const n=num(el.value);el.value=n?nf(n):''})}
 
 /* Todos los formularios siguen el mismo orden: título pequeño → monto grande → texto principal → "Más detalles" → botón */
-const amtIn=(id,v,color)=>`<input class="amt num" id="${id}" inputmode="numeric" placeholder="$0" value="${v?nf(v):''}" style="color:${color||'var(--ink)'}">`;
+const amtIn=(id,v,color)=>`<div class="amtw"><div class="amtv num${v?'':' ph'}" style="color:${color||'var(--ink)'}">${v?'$'+nf(v):'$0'}</div><input class="amt" id="${id}" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="13" autocomplete="off" value="${v||''}" style="color:${color||'var(--ink)'}"></div>`;
+/* Solo actualiza el texto de arriba: así el teclado de Android no se reinicia con cada número */
+function amtLive(el){const v=el.previousElementSibling;const upd=()=>{const n=num(el.value);v.textContent=n?'$'+nf(n):'$0';v.classList.toggle('ph',!n)};
+  el.addEventListener('input',upd);new MutationObserver(()=>{v.style.color=el.style.color}).observe(el,{attributes:true,attributeFilter:['style']});upd()}
 const moreBox=(inner,label,show)=>`<button class="more" id="moreB" style="${show?'display:none':''}"><span class="t">${label||'Más detalles'}</span><span>›</span></button><div id="moreD" style="${show?'':'display:none'}">${inner}</div>`;
 const openMore=()=>{if($('moreB')){$('moreB').style.display='none';$('moreD').style.display=''}};
 const TYPE_TITLE={out:'Nuevo gasto',in:'Nuevo ingreso',tr:'Transferencia'};
@@ -874,7 +883,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&runRec())
 runRec();
 if(ALL){dirty=true;flush()}
 render();
-if('serviceWorker' in navigator&&location.protocol!=='file:'&&location.hostname!=='localhost')navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* Siempre la versión nueva: cuando llega una actualización la app se recarga sola (si hay un panel abierto espera a que lo cierres) */
+if('serviceWorker' in navigator&&location.protocol!=='file:'&&location.hostname!=='localhost'){
+  const hadSW=!!navigator.serviceWorker.controller;let reloading=false;
+  const reloadNow=()=>{if(reloading)return;if(sheet.classList.contains('show')||$('dlg').classList.contains('show')){setTimeout(reloadNow,1500);return}reloading=true;flush();location.reload()};
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadSW)reloadNow()});
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update().catch(()=>{})})}).catch(()=>{});
+}
 }
 </script>
 </body>
