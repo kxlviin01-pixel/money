@@ -187,7 +187,7 @@ nav button:active svg{transform:scale(.88)}
 <button data-p="pres"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 6"/></svg>Presup.</button>
 <button data-p="calc"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Resumen</button>
 <button data-p="metas"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Metas</button>
-<button data-p="deudas"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM4 11h16M8 15h3"/></svg>Deudas</button>
+<button data-p="deudas"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM4 11h16M8 15h3"/></svg>Préstamos</button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
@@ -399,10 +399,10 @@ function rMetas(){
 function rDeudas(){
   const act=S.debts.filter(d=>!d.paid), me=act.filter(d=>d.dir==='me').reduce((s,d)=>s+d.amt,0), yo=act.filter(d=>d.dir==='yo').reduce((s,d)=>s+d.amt,0);
   const sec=(dir,t)=>{const l=S.debts.filter(d=>d.dir===dir).sort((a,b)=>a.paid-b.paid);return`<h2>${t}</h2><div class="card list">${l.length?l.map(d=>`<div class="it" data-debt="${d.id}" style="${d.paid?'opacity:.45':''}"><div class="ic">${esc(d.person[0]||'?')}</div><div class="grow"><div class="t">${esc(d.person)}</div><div class="mute t">${esc(d.note||'')}${d.paid?' · Pagado':''}</div></div><div class="num ${dir==='me'?'in':'out'}">${fmt(d.amt)}</div></div>`).join(''):'<div class="empty">Nada pendiente</div>'}</div>`};
-  $('p-deudas').innerHTML=`<h1>Deudas y préstamos</h1>
+  $('p-deudas').innerHTML=`<h1>Préstamos</h1>
   <div class="two" style="margin:0"><div class="card"><div class="mute">Me deben</div><div class="num in" style="font-size:20px;font-weight:600">${fmt(me)}</div></div><div class="card"><div class="mute">Debo</div><div class="num out" style="font-size:20px;font-weight:600">${fmt(yo)}</div></div></div>
   ${sec('me','Me deben')}${sec('yo','Yo debo')}
-  <button class="btn ghost" id="addDebt" style="margin-top:14px">+ Nueva deuda</button>`;
+  <button class="btn ghost" id="addDebt" style="margin-top:14px">+ Nuevo préstamo</button>`;
 }
 
 let cFrom=shiftM(today().slice(0,7),-2), cTo=today().slice(0,7);
@@ -650,7 +650,7 @@ function goalForm(g){
 function debtForm(d){
   const ed=!!d;d=d||{person:'',amt:0,dir:'me',note:''};let dir=d.dir;
   const col=k=>k==='me'?'var(--in)':'var(--out)';
-  open(`<div class="ftitle">${ed?'Editar deuda':'Nueva deuda'}</div>
+  open(`<div class="ftitle">${ed?'Editar préstamo':'Nuevo préstamo'}</div>
   ${amtIn('dA',d.amt,col(dir))}
   <div class="seg" id="dSeg" style="grid-template-columns:1fr 1fr;margin-top:6px"><button data-d="me" class="${dir==='me'?'on':''}">Me deben</button><button data-d="yo" class="${dir==='yo'?'on':''}">Yo debo</button></div>
   <input class="main" id="dP" value="${esc(d.person)}" placeholder="¿Quién?" maxlength="40">
@@ -661,7 +661,7 @@ function debtForm(d){
     $('dS').onclick=()=>{const person=$('dP').value.trim(),amt=num($('dA').value);if(!person||!amt)return toast('Pon persona y monto');
       const n={person,amt,dir,note:$('dN').value.trim()};if(ed)Object.assign(d,n);else S.debts.push({id:uid(),paid:false,...n});save();close();render();toast(ed?'Cambiado, parce':'Anotado, parce')};
     if(ed){$('dPaid').onclick=()=>{d.paid=!d.paid;save();close();render();toast(d.paid?'Saldada, de una':'Otra vez pendiente',d.paid&&d.dir==='me'?'in':undefined)};
-      $('dD').onclick=()=>ask('¿Eliminar la deuda con '+d.person+'?','Eliminar',()=>{S.debts=S.debts.filter(x=>x.id!==d.id);save();close();render();toast('Eliminada')})}
+      $('dD').onclick=()=>ask('¿Eliminar el préstamo con '+d.person+'?','Eliminar',()=>{S.debts=S.debts.filter(x=>x.id!==d.id);save();close();render();toast('Eliminada')})}
   });
 }
 
