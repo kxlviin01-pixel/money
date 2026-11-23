@@ -262,7 +262,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=28; /* súbelo junto con CACHE en sw.js */
+const APP_VER=29; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -933,7 +933,9 @@ function catsForm(){
 function budOne(c){
   const v=S.budgets[c]||0,g=byCat(month)[c]||0;
   open('<div class="ftitle">Límite de '+esc(c)+'</div>'+amtIn('bA',v)+'<p class="mute" style="text-align:center;margin-top:-2px">'+(g?'Este mes llevas '+fmt(g):'Este mes no has gastado en esto')+'</p>'+
+    (()=>{const l=sorted(ofMonth(month).filter(t=>t.type==='out'&&t.cat===c));return l.length?'<h2>Gastos de '+esc(c)+' este mes</h2><div class="card list">'+l.slice(0,30).map(txItem).join('')+'</div>'+(l.length>30?'<p class="mute" style="font-size:12px;margin-top:6px">Y '+(l.length-30)+' más en Movimientos</p>':''):'<p class="mute" style="text-align:center;font-size:13px;margin-top:14px">Pa\' que un gasto cuente aquí escoge '+esc(c)+' en Más detalles → Categoría</p>'})()+
     '<button class="btn" id="bOne" style="margin-top:16px">Guardar</button>'+(v?'<button class="btn del" id="bOff">Quitar límite</button>':''),()=>{
+    panel.querySelectorAll('[data-tx]').forEach(el=>el.onclick=()=>txForm(S.tx.find(t=>t.id===el.dataset.tx)));
     $('bOne').onclick=()=>{const n=num($('bA').value);if(!n)return need($('bA'),'¿Cuánto es el límite?');S.budgets[c]=n;save();close();later(render);toast(say('saved'))};
     if(v)$('bOff').onclick=()=>{delete S.budgets[c];save();close();later(render);toast('Sin límite pa\' '+c)};
   });
