@@ -352,9 +352,9 @@ function txItem(t){
   const sign=t.type==='in'?'+':t.type==='out'?'−':'';
   const cls=t.type==='in'?'in':t.type==='out'?'out':'mute';
   const title=t.desc||(t.type==='tr'?'Transferencia':t.cat);
-  const sub=t.type==='tr'?accName(t.acc)+' → '+accName(t.to):t.cat+' · '+accName(t.acc);
+  const sub=t.type==='tr'?accName(t.acc)+' → '+accName(t.to):t.type==='in'?accName(t.acc):t.cat+' · '+accName(t.acc);
   const d=new Date(t.date+'T12:00');
-  return `<div class="it" data-tx="${t.id}"><div class="ic">${esc((t.type==='tr'?'⇄':(t.cat||'?')[0]))}</div><div class="grow"><div class="t">${esc(title)}</div><div class="mute t">${esc(sub)} · ${d.getDate()} ${MES[d.getMonth()].slice(0,3)}${hora(t.time)}</div></div><div class="num ${cls}">${sign}${fmt(t.amt)}</div></div>`;
+  return `<div class="it" data-tx="${t.id}"><div class="ic">${esc((t.type==='tr'?'⇄':((t.type==='in'?t.desc:t.cat)||t.desc||'+')[0].toUpperCase()))}</div><div class="grow"><div class="t">${esc(title)}</div><div class="mute t">${esc(sub)} · ${d.getDate()} ${MES[d.getMonth()].slice(0,3)}${hora(t.time)}</div></div><div class="num ${cls}">${sign}${fmt(t.amt)}</div></div>`;
 }
 const sorted=a=>a.slice().sort((x,y)=>y.date.localeCompare(x.date)||(y.time||'').localeCompare(x.time||'')||y.id.localeCompare(x.id));
 const hora=t=>{if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h<12?'a. m.':'p. m.';h=h%12||12;return' · '+h+':'+String(m).padStart(2,'0')+' '+ap};
@@ -814,7 +814,7 @@ function txForm(t,pre){
   <button class="btn" id="fSave" style="margin-top:18px">Guardar</button>
   ${ed?'<button class="btn del" id="fDel">Eliminar</button>':''}`,()=>{
     const setT=k=>{type=k;panel.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));
-      $('fCatW').style.display=k==='tr'?'none':'';$('fToW').style.display=k==='tr'?'':'none';$('lAcc').textContent=k==='tr'?'Desde':'Cuenta';
+      $('fCatW').style.display=k==='out'?'':'none';$('fToW').style.display=k==='tr'?'':'none';$('lAcc').textContent=k==='tr'?'Desde':'Cuenta';
       if($('fRepW'))$('fRepW').style.display=k==='tr'?'none':'';
       if(!ed)$('fTitle').textContent=TYPE_TITLE[k];
       /* Transferencia: pregunta pa' qué es y da opciones rápidas */
@@ -833,8 +833,8 @@ function txForm(t,pre){
       if(!S.accounts.length)return toast('Primero crea una cuenta');
       const desc=$('fDesc').value.trim();
       /* Si no eligió categoría, usa la que puso antes para esa misma descripción */
-      let cat=type==='tr'?'':type==='in'?($('fCatIn').value.trim()||NOCAT):$('fCat').value;
-      if(type!=='tr'&&!catSet&&cat===NOCAT&&desc){const p=catGuess()[type+'|'+desc.toLowerCase()];if(p)cat=p}
+      let cat=type==='out'?$('fCat').value:'';
+      if(type==='out'&&!catSet&&cat===NOCAT&&desc){const p=catGuess()[type+'|'+desc.toLowerCase()];if(p)cat=p}
       const n={id:t.id||uid(),type,amt,desc,cat,acc:$('fAcc').value,to:type==='tr'?$('fTo').value:'',date:$('fDate').value||today(),time:$('fTime').value||''};
       if(type==='tr'&&n.acc===n.to){openMore();return toast('Elige cuentas distintas')}
       if(t.rec)n.rec=t.rec;
@@ -922,15 +922,15 @@ function recForm(r,pre){
   <input class="main" id="rN" value="${esc(r.desc)}" placeholder="Spotify, arriendo…" maxlength="60">
   <label>Día del mes en que se cobra</label><input id="rD" type="hidden" data-dayof value="${r.day}">
   ${moreBox(`<div class="seg" id="rSeg" style="grid-template-columns:1fr 1fr;margin-top:14px"><button data-t="out" class="${type==='out'?'on':''}">Gasto</button><button data-t="in" class="${type==='in'?'on':''}">Ingreso</button></div>
-  <label>Categoría</label><select id="rC"></select><input id="rCIn" list="rInCats" placeholder="¿De dónde sale?" maxlength="40" value="${r.type==='in'?esc(r.cat||''):''}"><datalist id="rInCats">${inCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+  <label id="rCL">Categoría</label><select id="rC"></select><input id="rCIn" list="rInCats" placeholder="¿De dónde sale?" maxlength="40" value="${r.type==='in'?esc(r.cat||''):''}"><datalist id="rInCats">${inCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
   <label>Cuenta</label><select id="rAcc">${accOpts(r.acc)}</select>
   <p class="mute" style="margin-top:8px">Si el mes tiene menos días, se anota el último día.</p>`,ed?(r.type==='in'?'Ingreso':'Gasto')+' · '+esc(r.cat||NOCAT)+' · '+esc(accName(r.acc)):'Más detalles')}
   <button class="btn" id="rS" style="margin-top:18px">Guardar</button>${ed?'<button class="btn del" id="rDel">Eliminar pago fijo</button>':''}`,()=>{
-    const setT=k=>{type=k;$('rSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$('rC').style.display=k==='in'?'none':'';$('rCIn').style.display=k==='in'?'':'none';$('rC').innerHTML=opts(CAT_OUT,CAT_OUT.includes(r.cat)?r.cat:CAT_OUT[0]);$('rA').style.color=TYPE_COLOR[k]};
+    const setT=k=>{type=k;$('rSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$('rC').style.display=k==='in'?'none':'';$('rCIn').style.display='none';$('rCL').style.display=k==='in'?'none':'';$('rC').innerHTML=opts(CAT_OUT,CAT_OUT.includes(r.cat)?r.cat:CAT_OUT[0]);$('rA').style.color=TYPE_COLOR[k]};
     setT(type);$('rSeg').onclick=e=>{const b=e.target.closest('button');b&&setT(b.dataset.t)};
     $('rS').onclick=()=>{const desc=$('rN').value.trim(),amt=num($('rA').value),day=Math.min(31,Math.max(1,num($('rD').value)));
       if(!amt)return need($('rA'),'¿Cuánto?');if(!desc)return need($('rN'),'¿Qué pago es?');if(!S.accounts.length)return toast('Primero crea una cuenta');
-      const n={type,desc,amt,day,cat:type==='in'?($('rCIn').value.trim()||NOCAT):$('rC').value,acc:$('rAcc').value};
+      const n={type,desc,amt,day,cat:type==='in'?'':$('rC').value,acc:$('rAcc').value};
       if(ed)Object.assign(r,n);else{const td=today(),cm=td.slice(0,7);S.recurring.push({id:uid(),...n,last:recDate(n,cm)<td?cm:shiftM(cm,-1)})}
       runRec();save();close();later(render);toast(ed?say('edited'):say('rec'))};
     if(ed)$('rDel').onclick=()=>ask('¿Eliminar el pago fijo "'+r.desc+'"? Los movimientos que ya se anotaron se quedan.','Eliminar',()=>{S.recurring=S.recurring.filter(x=>x.id!==r.id);save();close();later(render);toast(say('deleted'))});
