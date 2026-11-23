@@ -45,9 +45,12 @@ button{cursor:pointer;font:inherit}
 .btn.del{background:none;color:var(--out)}
 .link{background:none;border:0;color:var(--acc);font-size:14px;padding:6px 0}
 input,select{width:100%;background:#1b1b1f;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;min-height:48px}
-input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
+input,select{transition:border-color .2s,background .2s}
+input:focus,select:focus{outline:none;border-color:#3a3a44;background:#202026}
+input:focus-visible,select:focus-visible{outline:none}
 label{display:block;font-size:13px;color:var(--mute);margin:12px 0 6px}
-.amt{font-size:34px;font-weight:600;text-align:center;border:0;background:none;padding:6px}
+.amt,.amt:focus{font-size:40px;font-weight:600;text-align:center;border:0;background:none;padding:6px;min-height:64px;caret-color:currentColor}
+.amt::placeholder{color:currentColor;opacity:.35}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:#1b1b1f;border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;background:none;color:var(--mute);padding:10px;border-radius:9px}
 .seg button.on{background:var(--card);color:var(--ink)}
@@ -57,12 +60,14 @@ nav button.on{color:var(--ink)}
 nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .fab{position:fixed;right:max(18px,calc(50% - 262px));bottom:calc(80px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;border:1px solid rgba(61,220,151,.55);background:rgba(61,220,151,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--acc);font-size:28px;line-height:1;z-index:6;transition:transform .2s,opacity .2s}
 .fab.hid{transform:translateY(24px) scale(.8);opacity:0;pointer-events:none}
-.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:10}
-.sheet.show{display:flex}
-.panel{background:#111114;width:100%;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;animation:up .22s ease}
-.grab{width:40px;height:4px;background:#333;border-radius:4px;margin:0 auto 12px}
-@keyframes up{from{transform:translateY(40px);opacity:.4}}
-@media(prefers-reduced-motion:reduce){.panel{animation:none}}
+/* Hoja que sube desde abajo: el fondo se oscurece suave, se arrastra con el dedo y lo de atrás no se mueve */
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,0);display:flex;align-items:flex-end;z-index:10;visibility:hidden;transition:background .3s ease,visibility 0s linear .38s;overscroll-behavior:contain;touch-action:none}
+.sheet.show{visibility:visible;background:rgba(0,0,0,.6);transition:background .3s ease,visibility 0s}
+.panel{background:#111114;width:100%;max-width:560px;margin:0 auto;border-radius:24px 24px 0 0;padding:8px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;transform:translateY(105%);transition:transform .4s cubic-bezier(.22,1,.36,1);box-shadow:0 -10px 40px rgba(0,0,0,.4)}
+.sheet.show .panel{transform:none}
+.panel.drag{transition:none}
+.grab{width:40px;height:5px;background:#3a3a40;border-radius:5px;margin:0 auto;box-sizing:content-box;padding:6px 40px 14px;background-clip:content-box;cursor:grab;touch-action:none}
+@media(prefers-reduced-motion:reduce){.panel,.sheet,.dbox,.page.on{transition:none!important;animation:none!important}}
 .empty{text-align:center;color:var(--mute);padding:28px 0;font-size:14px}
 .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .mhead button{background:#1b1b1f;border:0;color:var(--ink);width:40px;height:40px;border-radius:12px;font-size:18px}
@@ -83,7 +88,17 @@ nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;st
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
 .more .t{flex:1;min-width:0}
-.page{display:none}.page.on{display:block}
+.page{display:none}.page.on{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}}
+/* Respuesta al toque, como en apps nativas */
+.btn,.chip,.qa button,.icb,.mhead button,.fab,.more,.mbtn,.seg button,.card[data-acc],.card[data-goal],.it[data-tx],.it[data-rec],.it[data-debt],button.card{transition:transform .15s ease,background .2s,color .2s,opacity .2s,border-color .2s}
+.btn:active,.chip:active,.qa button:active,.icb:active,.mhead button:active,.more:active,.mbtn:active,.seg button:active,button.card:active,.card[data-acc]:active,.card[data-goal]:active{transform:scale(.97)}
+.fab:active{transform:scale(.9)}
+.it[data-tx]:active,.it[data-rec]:active,.it[data-debt]:active{opacity:.6}
+nav button{transition:color .2s}
+nav button svg{transition:transform .2s}
+nav button:active svg{transform:scale(.88)}
+.bar i{transition:width .5s cubic-bezier(.22,1,.36,1)}
 .ranges{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.ranges input{min-width:0;padding:13px 10px}
 .mrow{display:grid;grid-template-columns:1fr auto auto;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.mrow:last-child{border:0}
 .top{margin:4px 0 14px}
@@ -101,7 +116,8 @@ input.main{margin-top:10px;text-align:center;border-color:transparent;background
 .day{font-size:24px;font-weight:600}
 .warn{border-color:#4a3c16;background:#1d1a10}
 .dlg{align-items:center;justify-content:center;z-index:30;padding:16px}
-.dbox{background:#151518;border:1px solid var(--line);border-radius:18px;padding:20px;width:100%;max-width:360px}
+.dbox{background:#151518;border:1px solid var(--line);border-radius:20px;padding:20px;width:100%;max-width:360px;transform:scale(.92);opacity:0;transition:transform .3s cubic-bezier(.22,1.3,.36,1),opacity .2s}
+.dlg.show .dbox{transform:none;opacity:1}
 .dbox p{margin-bottom:16px;line-height:1.5}
 .dbox .yes{background:var(--out);color:#fff}
 .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--ink)}
@@ -177,8 +193,9 @@ function runRec(){
 function upcoming(){return S.recurring.map(r=>({r,date:recDate(r,shiftM(r.last,1))})).sort((a,b)=>a.date.localeCompare(b.date))}
 const daysTo=d=>Math.round((new Date(d+'T12:00')-new Date(today()+'T12:00'))/864e5);
 const whenTxt=d=>{const n=daysTo(d);return n<=0?'hoy':n===1?'mañana':'en '+n+' días'};
-function ask(msg,yes,cb){$('dMsg').textContent=msg;$('dYes').textContent=yes||'Eliminar';$('dlg').classList.add('show');
-  $('dNo').onclick=()=>$('dlg').classList.remove('show');$('dYes').onclick=()=>{$('dlg').classList.remove('show');cb()}}
+function ask(msg,yes,cb){const d=$('dlg');$('dMsg').textContent=msg;$('dYes').textContent=yes||'Eliminar';lockBg();d.classList.add('show');
+  const hide=()=>{d.classList.remove('show');setTimeout(unlockBg,0)};
+  $('dNo').onclick=hide;d.onclick=e=>{if(e.target===d)hide()};$('dYes').onclick=()=>{hide();cb()}}
 /* Aviso que sube desde abajo, transparente y del color del movimiento (verde entra, rojo sale) */
 function toast(m,kind){const t=$('toast');t.className='toast';void t.offsetWidth;t.textContent=m;if(kind==='in'||kind==='out'||kind==='tr')t.classList.add(kind);t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
 
@@ -374,12 +391,30 @@ function go(p){page=p;document.querySelectorAll('.page').forEach(s=>s.classList.
 
 /* Sheets */
 const sheet=$('sheet'),panel=$('panel');
-function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;sheet.classList.add('show');
+function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;panel.scrollTop=0;panel.style.transform='';sheet.style.background='';lockBg();sheet.classList.add('show');
   panel.querySelectorAll('input[inputmode=numeric]:not([type=number])').forEach(moneyInput);
   if($('moreB'))$('moreB').onclick=openMore;
   bind&&bind();const f=panel.querySelector('.amt');if(f&&!f.value)setTimeout(()=>f.focus(),60)}
-function close(){sheet.classList.remove('show')}
+/* Congela la pantalla de atrás mientras hay una hoja o un diálogo abierto */
+let lockY=null;
+function lockBg(){if(lockY!==null)return;lockY=scrollY;Object.assign(document.body.style,{position:'fixed',top:-lockY+'px',left:'0',right:'0'})}
+function unlockBg(){if(lockY===null||sheet.classList.contains('show')||$('dlg').classList.contains('show'))return;const y=lockY;lockY=null;Object.assign(document.body.style,{position:'',top:'',left:'',right:''});scrollTo(0,y)}
+function close(){sheet.classList.remove('show');panel.style.transform='';sheet.style.background='';document.activeElement?.blur?.();setTimeout(unlockBg,0)}
 sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
+/* Arrastrar la hoja con el dedo: hacia abajo se cierra, si la sueltas antes vuelve a su sitio */
+{let sy=null,dy=0,t0=0,dragging=false;
+  panel.addEventListener('touchstart',e=>{if(panel.scrollTop>2&&!e.target.closest('.grab'))return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
+  panel.addEventListener('touchmove',e=>{if(sy===null)return;dy=e.touches[0].clientY-sy;
+    if(!dragging){if(dy<6)return;if(panel.scrollTop>2&&!e.target.closest('.grab')){sy=null;return}dragging=true;panel.classList.add('drag');document.activeElement?.blur?.()}
+    e.preventDefault();const d=Math.max(0,dy),h=panel.offsetHeight;
+    panel.style.transform=`translateY(${d}px)`;sheet.style.background=`rgba(0,0,0,${(.6*(1-Math.min(1,d/h))).toFixed(3)})`},{passive:false});
+  const end=()=>{if(sy===null)return;sy=null;if(!dragging)return;dragging=false;panel.classList.remove('drag');
+    const v=dy/Math.max(1,Date.now()-t0);if(dy>panel.offsetHeight*.25||(dy>40&&v>.5))close();else{panel.style.transform='';sheet.style.background=''}};
+  panel.addEventListener('touchend',end);panel.addEventListener('touchcancel',end);
+  /* Tocar o arrastrar el fondo oscuro no mueve la pantalla de atrás */
+  sheet.addEventListener('touchmove',e=>{if(!panel.contains(e.target))e.preventDefault()},{passive:false});
+  $('dlg').addEventListener('touchmove',e=>{if(!e.target.closest('.dbox'))e.preventDefault()},{passive:false});
+}
 const opts=(arr,sel)=>arr.map(v=>`<option ${v===sel?'selected':''}>${esc(v)}</option>`).join('');
 const accOpts=sel=>S.accounts.map(a=>`<option value="${a.id}" ${a.id===sel?'selected':''}>${esc(a.name)}</option>`).join('');
 function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?n.toLocaleString('es-CO'):''})}
