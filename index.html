@@ -166,6 +166,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 .lite .toast.show{animation:toastLite .3s cubic-bezier(.2,1.2,.4,1)}
 @keyframes toastLite{from{opacity:0;transform:translate(-50%,30px)}}
 .lite .fo{transition-duration:.2s}.lite .panel{transition-duration:.3s}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.three .card{padding:12px}
+.tag{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(61,220,151,.14);color:var(--in);white-space:nowrap}.tag.maybe{background:rgba(255,203,107,.14);color:#ffcb6b}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
@@ -227,7 +229,7 @@ nav button:active svg{transform:scale(.88)}
 <button data-p="pres"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6 6"/></svg>Presup.</button>
 <button data-p="calc"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Resumen</button>
 <button data-p="metas"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Metas</button>
-<button data-p="deudas"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM4 11h16M8 15h3"/></svg>Préstamos</button>
+<button data-p="deudas"><svg viewBox="0 0 24 24"><path d="M4 7h16v12H4zM4 11h16M8 15h3"/></svg>Pendientes</button>
 </nav>
 
 <div class="sheet" id="sheet"><div class="panel" id="panel"></div></div>
@@ -248,7 +250,7 @@ const nowTime=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0'
 const COLORS=['#3ddc97','#6ea8ff','#c792ea','#ffcb6b','#ff6b6b','#5ce1e6'];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
-const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],tx:[],budgets:{},goals:[],debts:[],recurring:[],lastBackup:0,hide:false});
+const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],tx:[],budgets:{},goals:[],debts:[],recurring:[],pending:[],lastBackup:0,hide:false});
 /* Migración: datos viejos no tenían recurring/lastBackup/hide; se agregan sin tocar lo demás */
 const migrate=d=>{const b=def();for(const k in b)if(d[k]===undefined)d[k]=b[k];return d};
 let S;
@@ -412,10 +414,22 @@ const MSG={
 };
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 let lastMsg="";
+/* El mensaje va con el tamaño de la plata: chichiguas · normal · harta liga (200 mil+) · palos (1 millón+) */
+MSG.inTiny=["Unas chichiguas","Pa' las vueltas","Unos mangos ahí","Algo es algo","Monedita a la caleta","Peor es nada parce","Pa'l tinto alcanza","Chichigua pero cuenta","Unas lukitas","De a poquito se llena la caleta"];
+MSG.inMid=["Uff ¿y esa plata qué?","Uy esa liga está buena","Ala qué billete","La caleta se puso gorda","Esos mangos sí se ven","Uff qué lukas","Ahora sí hay liga","¿Y esa platica qué parce?","Ese billete pesa","Qué liga tan berraca","Uy la caleta está contenta"];
+MSG.inHuge=MSG.inBig.concat(["Uff un palo ¿y esa plata qué?","La caleta reventó","Ahora sí está montado en la liga","Ala sumercé ¿se ganó la lotería?"]);
+MSG.outTiny=MSG.outSmall.concat(["Unos mangos nomás","Chichiguas","Pa' las vueltas","Ni pa' un tinto"]);
+MSG.outMid=["Uff ¿y esa plata qué?","Uy se fue buena liga","La caleta quedó flaca","Esos mangos dolieron","Qué lukas tan berracas","Ala sumercé eso fue harto","Uff qué chorro de plata","La caleta pidió auxilio","Uy eso sí fue liga"];
+MSG.outHuge=MSG.outBig.concat(["Uff un palo menos","La caleta quedó en ceros casi","Ala ¿y ese palo pa' dónde?"]);
+MSG.in.push("Más liga pa' la caleta","Entraron unos mangos","Lukas a la caleta","Llegó la liga");
+MSG.out.push("Se fue la liga","Adiós mangos","La caleta se adelgaza","Chao lukas");
 function moneyMsg(type,amt,cat){
-  let pool=MSG[type];
-  if(amt>=1e6&&MSG[type+"Big"])pool=MSG[type+"Big"];
-  else{const c=MSG[type+"Cat"]&&MSG[type+"Cat"][cat];if(c&&Math.random()<.6)pool=c;else if(type==="out"&&amt<5000&&Math.random()<.5)pool=MSG.outSmall}
+  let pool;
+  if(type==="tr")pool=MSG.tr;
+  else if(amt>=1e6)pool=MSG[type+"Huge"];
+  else if(amt>=2e5)pool=MSG[type+"Mid"];
+  else if(amt<5000)pool=MSG[type+"Tiny"];
+  else{const c=MSG[type+"Cat"]&&MSG[type+"Cat"][cat];pool=c&&Math.random()<.5?c:MSG[type]}
   let m=rnd(pool);if(m===lastMsg&&pool.length>1)m=rnd(pool);lastMsg=m;return m;
 }
 /* Avisos generales: sin comas, bien rolos y variados */
@@ -431,6 +445,11 @@ const OK={
   abono:["Un pasito más","Va llenando la alcancía","Abonado mi llave","Eso suma","La alcancía sonríe","Cada luka cuenta","Más cerquita parce","Juicioso sumercé"],
   retiro:["Sacó de la alcancía","Retirado","Ojo con la meta","Uy le metió la mano a la alcancía","Pilas que la meta llora","Sacadito"],
   acc:["Bolsillo nuevo","Listo el bolsillo","Cuenta creada","Otro bolsillo pa' la colección","Bolsillo listo parce"],
+  air:["Anotado lo del camello","Esa liga ya viene","Pilas cobrarle","Anotado pa' cobrar","Ese camello se paga"],
+  airMaybe:["Anotado por si acaso","Ojalá llegue esa liga","Entre sí y no anotado","Crucemos los dedos"],
+  paidAll:["Ese camello sí pagó","Llegó la liga del camello","Cobrado de una","A la caleta lo del camello"],
+  paidPart:["Algo es algo","Va cayendo de a poquito","Abonó parte de la liga","Unos mangos de lo del camello"],
+  lost:["Qué boleta parce","Esa liga se perdió","Ni modo sumercé","Pa' la próxima cobre antes"],
   rec:["Listo se anota solo cada mes","Pago fijo anotado","Eso ya se anota solo","Ya no tiene que acordarse","Anotado pa' todos los meses","De eso me encargo yo parce"]
 };
 const say=k=>rnd(OK[k]);
@@ -455,6 +474,7 @@ function rInicio(){
   const hola=pick(SALUDO[mood]);
   const fecha=now.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
   const rec=recent(5);
+  const pt=pendTotals();
   const nc=memo('nc',()=>S.tx.reduce((s,t)=>s+(t.cat===NOCAT),0)), ins=insLater();
   const oldBk=S.tx.length&&Date.now()-S.lastBackup>14*864e5;
   $('p-inicio').innerHTML=`
@@ -470,6 +490,7 @@ function rInicio(){
     ${cmp}
   </div>
   <div class="qa"><button class="o" data-new="out"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>Gasto</button><button class="i" data-new="in"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>Ingreso</button><button class="t2" data-new="tr"><svg viewBox="0 0 24 24"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Transferir</button></div>
+  ${pt.all?`<button class="card row" id="airCard" style="width:100%;margin-top:12px;color:var(--ink);text-align:left"><span class="grow"><span class="mute" style="display:block;font-size:13px">Plata en el aire</span><b class="num" style="font-size:18px">${H(pt.all)}</b><span class="mute" style="display:block;font-size:12px">Si te pagan todo tendrías ${H(total()+pt.all)}</span></span><span class="mute">›</span></button>`:''}
   ${ins.length&&!S.hide?`<h2>Lo que noté</h2><div class="card list">${ins.map(x=>`<div class="it" style="display:block;font-size:14px;line-height:1.5">${x}</div>`).join('')}</div>`:''}
   ${tl?`<h2 class="row"><span class="grow">Presupuesto del mes</span><button class="link" data-go="pres">Ver</button></h2>
   <div class="card"><div class="mute">Puedes gastar al día</div><div class="day num ${tg>tl?'out':''}">${H(perDay)}</div><div class="mute">${tg>tl?'Te pasaste por '+H(tg-tl):'Te quedan '+H(tl-tg)+' para '+left+(left===1?' día':' días')}</div><div class="bar"><i style="width:${Math.min(100,tg/tl*100)}%;background:${tg>tl?'var(--out)':tg/tl>.8?'#ffcb6b':'var(--acc)'}"></i></div></div>`:''}
@@ -521,13 +542,63 @@ function rMetas(){
   <button class="btn ghost" id="addGoal" style="margin-top:10px">+ Nueva meta</button>`;
 }
 
+/* Pendientes: "Plata en el aire" (lo que te deben de tu camello, no cuenta en el saldo) + Préstamos */
+const pLeft=p=>Math.max(0,p.amt-(p.paid||0));
+const pOpen=()=>S.pending.filter(p=>p.status==='open');
+function pendTotals(){return memo('pend',()=>{let all=0,sure=0;for(const p of pOpen()){const l=pLeft(p);all+=l;if(p.sure!=='talvez')sure+=l}return{all,sure}})}
 function rDeudas(){
   const act=S.debts.filter(d=>!d.paid), me=act.filter(d=>d.dir==='me').reduce((s,d)=>s+d.amt,0), yo=act.filter(d=>d.dir==='yo').reduce((s,d)=>s+d.amt,0);
+  const pt=pendTotals();
+  const groups={};for(const p of pOpen())(groups[p.person]=groups[p.person]||[]).push(p);
+  const air=Object.entries(groups).map(([who,l])=>{const tot=l.reduce((s,p)=>s+pLeft(p),0);
+    return`<div class="card list" style="margin-bottom:10px"><div class="row" style="padding:2px 0 8px"><b class="grow t">${esc(who)}</b><span class="num" style="font-weight:600">${fmt(tot)}</span></div>
+    ${l.sort((a,b)=>b.date.localeCompare(a.date)).map(p=>`<div class="it" data-pend="${p.id}"><div class="grow"><div class="t">${esc(p.note||'Trabajo')}</div><div class="mute t">${dLabel(p.date)}${p.paid?' · pagó '+fmt(p.paid):''}</div></div><span class="tag ${p.sure==='talvez'?'maybe':''}">${p.sure==='talvez'?'Tal vez':'Seguro'}</span><div class="num" style="margin-left:8px">${fmt(pLeft(p))}</div></div>`).join('')}</div>`}).join('');
   const sec=(dir,t)=>{const l=S.debts.filter(d=>d.dir===dir).sort((a,b)=>a.paid-b.paid);return`<h2>${t}</h2><div class="card list">${l.length?l.map(d=>`<div class="it" data-debt="${d.id}" style="${d.paid?'opacity:.45':''}"><div class="ic">${esc(d.person[0]||'?')}</div><div class="grow"><div class="t">${esc(d.person)}</div><div class="mute t">${esc(d.note||'')}${d.paid?' · Pagado':''}</div></div><div class="num ${dir==='me'?'in':'out'}">${fmt(d.amt)}</div></div>`).join(''):'<div class="empty">Nada pendiente</div>'}</div>`};
-  $('p-deudas').innerHTML=`<h1>Préstamos</h1>
-  <div class="two" style="margin:0"><div class="card"><div class="mute">Me deben</div><div class="num in" style="font-size:20px;font-weight:600">${fmt(me)}</div></div><div class="card"><div class="mute">Debo</div><div class="num out" style="font-size:20px;font-weight:600">${fmt(yo)}</div></div></div>
+  $('p-deudas').innerHTML=`<h1>Pendientes</h1>
+  <div class="three"><div class="card"><div class="mute">En el aire</div><div class="num" style="font-size:18px;font-weight:600">${fmt(pt.all)}</div></div><div class="card"><div class="mute">Me deben</div><div class="num in" style="font-size:18px;font-weight:600">${fmt(me)}</div></div><div class="card"><div class="mute">Debo</div><div class="num out" style="font-size:18px;font-weight:600">${fmt(yo)}</div></div></div>
+  <h2 class="row"><span class="grow">Plata en el aire</span><button class="link" id="addPend">+ Por cobrar</button></h2>
+  <p class="mute" style="margin:-4px 0 10px">Lo que te deben de tu camello. No cuenta en tu saldo hasta que te paguen.</p>
+  ${air||'<div class="card empty">Nada en el aire. Anota lo que te deben del camello</div>'}
+  <h2 style="margin-top:26px;font-size:16px;color:var(--ink)">Préstamos</h2>
   ${sec('me','Me deben')}${sec('yo','Yo debo')}
   <button class="btn ghost" id="addDebt" style="margin-top:14px">+ Nuevo préstamo</button>`;
+}
+function pendForm(p){
+  const ed=!!p;p=p||{person:(S.pending[S.pending.length-1]||{}).person||'',amt:0,note:'',sure:'seguro',date:today()};let sure=p.sure;
+  const people=[...new Set(S.pending.map(x=>x.person))];
+  open(`<div class="ftitle">${ed?esc(p.person)+' · falta '+fmt(pLeft(p)):'Por cobrar'}</div>
+  ${amtIn('pA',ed?p.amt:0)}
+  <input class="main" id="pP" placeholder="¿Quién te debe?" value="${esc(p.person)}" maxlength="40" ${people.length?'list="pPeople"':''}>${people.length?`<datalist id="pPeople">${people.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>`:''}
+  <input class="main" id="pN" placeholder="¿Por qué? (trabajo del sábado)" value="${esc(p.note)}" maxlength="60">
+  <div class="seg" id="pSeg" style="grid-template-columns:1fr 1fr;margin-top:10px"><button data-s="seguro" class="${sure!=='talvez'?'on':''}">Seguro</button><button data-s="talvez" class="${sure==='talvez'?'on':''}">Tal vez</button></div>
+  ${moreBox(`<label>Fecha</label><input type="date" id="pD" value="${p.date}">`,ed?dLabel(p.date):'Más detalles')}
+  ${ed?`<div class="two" style="margin-top:16px"><button class="btn" id="pAll">Ya me pagó</button><button class="btn ghost" id="pPart">Me pagó una parte</button></div>
+  <button class="btn ghost" id="pS" style="margin-top:8px">Guardar cambios</button>
+  <button class="btn del" id="pLost">No llegó</button>`:'<button class="btn" id="pS" style="margin-top:18px">Guardar</button>'}`,()=>{
+    $('pSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;sure=b.dataset.s;$('pSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};
+    $('pS').onclick=()=>{const amt=num($('pA').value),person=$('pP').value.trim();
+      if(!amt)return need($('pA'),'¿Cuánto?');if(!person)return need($('pP'),'¿Quién te debe?');
+      if(ed&&amt<(p.paid||0))return need($('pA'),'Ya te pagó más que eso');
+      const n={person,amt,note:$('pN').value.trim(),sure,date:$('pD').value||today()};
+      if(ed)Object.assign(p,n);else S.pending.push({id:uid(),paid:0,status:'open',...n});
+      save();close();later(render);toast(ed?say('edited'):say(sure==='talvez'?'airMaybe':'air'))};
+    if(ed){$('pAll').onclick=()=>payForm(p,true);$('pPart').onclick=()=>payForm(p,false);
+      $('pLost').onclick=()=>ask('¿Marcar que '+p.person+' no te va a pagar '+fmt(pLeft(p))+'? Se quita de la plata en el aire.','No llegó',()=>{p.status='lost';save();close();later(render);toast(say('lost'))})}
+  });
+}
+/* Cuando paga: se vuelve un ingreso de verdad en la cuenta que escojas */
+function payForm(p,all){
+  const lastAcc=(recent(30).find(x=>x.type==='in')||{}).acc;
+  open(`<div class="ftitle">${all?'Te pagó todo':'Te pagó una parte'} · ${esc(p.person)}</div>
+  ${amtIn('yA',all?pLeft(p):0,'var(--in)')}
+  <p class="mute" style="text-align:center;margin-top:-2px">Faltaba ${fmt(pLeft(p))}</p>
+  <label>¿En qué cuenta te cayó?</label><select id="yAcc">${accOpts(S.accounts.some(a=>a.id===lastAcc)?lastAcc:S.accounts[0]?.id)}</select>
+  <button class="btn" id="yS" style="margin-top:18px">Listo</button>`,()=>{
+    $('yS').onclick=()=>{const amt=Math.min(num($('yA').value),pLeft(p));if(!amt)return need($('yA'),'¿Cuánto te pagó?');if(!S.accounts.length)return toast('Primero crea una cuenta');
+      const tx={id:uid(),type:'in',amt,desc:(p.note||'Trabajo')+' · '+p.person,cat:'Trabajo',acc:$('yAcc').value,to:'',date:today(),time:nowTime(),pend:p.id};
+      S.tx.push(tx);touch(tx.date);p.paid=(p.paid||0)+amt;if(pLeft(p)<=0)p.status='done';
+      save();close();later(render);toast((p.status==='done'?say('paidAll'):say('paidPart'))+' +'+fmt(amt),'in')};
+  });
 }
 
 let cFrom=shiftM(today().slice(0,7),-2), cTo=today().slice(0,7);
@@ -864,6 +935,9 @@ document.querySelector('main').addEventListener('click',e=>{
     if(r==='y')cFrom=now.slice(0,4)+'-01';else if(r==='all'){const ms=monthsDesc();cFrom=ms.length?ms[ms.length-1]:now}else cFrom=shiftM(now,1-Number(r));return rCalc()}
   const f=e.target.closest('[data-f]');if(f){filt=f.dataset.f;return rMov()}
   const mp=e.target.closest('[data-mp]');if(mp)return monthPicker(mp.dataset.mp);
+  const pe=e.target.closest('[data-pend]');if(pe)return pendForm(S.pending.find(x=>x.id===pe.dataset.pend));
+  if(e.target.closest('#addPend'))return pendForm();
+  if(e.target.closest('#airCard'))return go('deudas');
   const sg=e.target.closest('[data-sug]');if(sg)return recForm(null,SUG[sg.dataset.sug]);
   const nw=e.target.closest('[data-new]');if(nw)return txForm(null,nw.dataset.new);
   const rc=e.target.closest('[data-rec]');if(rc)return recForm(S.recurring.find(x=>x.id===rc.dataset.rec));
