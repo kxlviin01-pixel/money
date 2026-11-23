@@ -182,6 +182,7 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 .kp button{height:52px;border:0;border-radius:14px;background:rgba(255,255,255,.07);color:var(--ink);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums;touch-action:manipulation;transition:background .12s,transform .12s}
 .kp button:active{background:rgba(255,255,255,.18);transform:scale(.95)}
 .kp [data-k="000"]{font-size:18px}.kp [data-k="⌫"]{font-size:20px;color:var(--mute)}
+html.locked .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top))}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
@@ -678,7 +679,8 @@ sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
 panel.addEventListener('focusin',e=>{if(e.target.matches('input,textarea'))panel.querySelectorAll('.amtw.active').forEach(w=>w._hide())});
 /* Arrastrar la hoja con el dedo: hacia abajo se cierra, si la sueltas antes vuelve a su sitio */
 {let sy=null,dy=0,t0=0,dragging=false;
-  panel.addEventListener('touchstart',e=>{if(panel.scrollTop>2&&!e.target.closest('.grab'))return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
+  const innerScroll=t=>{for(let el=t;el&&el!==panel;el=el.parentElement){if(el.scrollHeight>el.clientHeight+1){const o=getComputedStyle(el).overflowY;if(o==='auto'||o==='scroll')return el}}return null};
+  panel.addEventListener('touchstart',e=>{sy=null;if(panel.scrollTop>2&&!e.target.closest('.grab'))return;const sc=innerScroll(e.target);if(sc&&sc.scrollTop>0)return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
   panel.addEventListener('touchmove',e=>{if(sy===null)return;dy=e.touches[0].clientY-sy;
     if(!dragging){if(dy<=0){if(dy<-6)sy=null;return}if(panel.scrollTop>2&&!e.target.closest('.grab')){sy=null;return}
       if(e.cancelable)e.preventDefault();if(dy<6)return;dragging=true;panel.classList.add('drag');document.activeElement?.blur?.()}
@@ -702,7 +704,7 @@ function fx(el,label,build){
   const v=w.querySelector('.v'),inner=w.querySelector('.foi');
   const api={w,set:(t)=>{v.innerHTML=t},collapse:()=>w.classList.remove('open'),
     refresh(){v.innerHTML=label();w.style.display=el.style.display==='none'?'none':'';if(w.classList.contains('open'))inner.innerHTML=build()}};
-  w.querySelector('.fld').onclick=()=>{const was=w.classList.contains('open');panel.querySelectorAll('.fx.open').forEach(x=>x.classList.remove('open'));
+  w.querySelector('.fld').onclick=()=>{hidePads();const was=w.classList.contains('open');panel.querySelectorAll('.fx.open').forEach(x=>x.classList.remove('open'));
     if(!was){inner.innerHTML=build();w.classList.add('open');setTimeout(()=>w.scrollIntoView({block:'nearest',behavior:'smooth'}),180)}};
   new MutationObserver(()=>api.refresh()).observe(el,{attributes:true,childList:true,subtree:true});
   api.refresh();return {api,inner};
@@ -789,7 +791,8 @@ function numPad(w){
 function amtLive(el){const v=el.previousElementSibling;const upd=()=>{const n=num(el.value);v.textContent=n?'$'+nf(n):'$0';v.classList.toggle('ph',!n)};
   el.addEventListener('input',upd);new MutationObserver(()=>{v.style.color=el.style.color}).observe(el,{attributes:true,attributeFilter:['style']});upd()}
 const moreBox=(inner,label,show)=>`<button class="more" id="moreB" style="${show?'display:none':''}"><span class="t">${label||'Más detalles'}</span><span>›</span></button><div id="moreD" style="${show?'':'display:none'}">${inner}</div>`;
-const openMore=()=>{if($('moreB')){$('moreB').style.display='none';$('moreD').style.display=''}};
+const hidePads=()=>panel.querySelectorAll('.amtw.active').forEach(x=>x._hide());
+const openMore=()=>{if($('moreB')){hidePads();$('moreB').style.display='none';$('moreD').style.display=''}};
 const TR_FOR=["Compras online","Sacar efectivo","Pa' ahorrar","Pagar algo","Recargar"];
 const TYPE_TITLE={out:'Nuevo gasto',in:'Nuevo ingreso',tr:'Transferencia'};
 const TYPE_COLOR={out:'var(--out)',in:'var(--in)',tr:'#6ea8ff'};
