@@ -169,7 +169,8 @@ html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 .three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.three .card{padding:12px}
 .tag{font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(61,220,151,.14);color:var(--in);white-space:nowrap}.tag.maybe{background:rgba(255,203,107,.14);color:#ffcb6b}
 /* Formulario compacto y Guardar siempre a la vista (pegado abajo del panel) */
-.panel>.btn:not(.ghost):not(.del){position:sticky;bottom:0;z-index:2;box-shadow:0 -14px 16px 6px rgba(20,20,24,.97),0 28px 0 28px rgb(20,20,24)}
+.acts{position:sticky;bottom:0;z-index:2;margin:10px -18px 0;padding:10px 18px 0;background:rgb(20,20,24);box-shadow:0 -12px 12px -4px rgb(20,20,24)}
+.acts>.btn{margin-top:0!important}.acts>.btn+.btn,.acts>.two+.btn,.acts>.btn+.two{margin-top:8px!important}
 .panel .amtv{font-size:38px;line-height:56px;min-height:56px}
 .panel input.main{margin-top:6px}
 .panel .more{margin-top:8px}
@@ -652,6 +653,8 @@ function open(html,bind){panel.innerHTML='<div class="grab"></div>'+html;panel.s
   panel.querySelectorAll('input[inputmode=numeric]:not([type=number]):not(.amt)').forEach(moneyInput);
   if($('moreB'))$('moreB').onclick=openMore;
   enhance(panel);
+  {const k=[...panel.children];let i=k.length;while(i>0&&k[i-1].matches('.btn,.two'))i--;const tail=k.slice(i);
+   if(tail.length&&tail.some(b=>b.matches('.btn:not(.ghost):not(.del)')||b.querySelector?.('.btn:not(.ghost)'))){const w=document.createElement('div');w.className='acts';tail[0].before(w);tail.forEach(b=>w.appendChild(b))}}
   panel.onkeydown=e=>{if(e.key!=='Enter'||!e.target.matches('input'))return;e.preventDefault();
     const empty=[...panel.querySelectorAll('input.amt,input.main')].find(i=>i!==e.target&&!i.value.trim()&&i.offsetParent);
     if(empty)empty.focus();else panel.querySelector('.btn:not(.ghost):not(.del)')?.click()};
@@ -668,8 +671,9 @@ sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
 {let sy=null,dy=0,t0=0,dragging=false;
   panel.addEventListener('touchstart',e=>{if(panel.scrollTop>2&&!e.target.closest('.grab'))return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
   panel.addEventListener('touchmove',e=>{if(sy===null)return;dy=e.touches[0].clientY-sy;
-    if(!dragging){if(dy<6)return;if(panel.scrollTop>2&&!e.target.closest('.grab')){sy=null;return}dragging=true;panel.classList.add('drag');document.activeElement?.blur?.()}
-    e.preventDefault();const d=Math.max(0,dy),h=panel.offsetHeight;
+    if(!dragging){if(dy<=0){if(dy<-6)sy=null;return}if(panel.scrollTop>2&&!e.target.closest('.grab')){sy=null;return}
+      if(e.cancelable)e.preventDefault();if(dy<6)return;dragging=true;panel.classList.add('drag');document.activeElement?.blur?.()}
+    if(e.cancelable)e.preventDefault();const d=Math.max(0,dy),h=panel.offsetHeight;
     panel.style.transform=`translateY(${d}px)`;sheet.style.background=`rgba(0,0,0,${(.6*(1-Math.min(1,d/h))).toFixed(3)})`},{passive:false});
   const end=()=>{if(sy===null)return;sy=null;if(!dragging)return;dragging=false;panel.classList.remove('drag');
     const v=dy/Math.max(1,Date.now()-t0);if(dy>panel.offsetHeight*.25||(dy>40&&v>.5))close();else{panel.style.transform='';sheet.style.background=''}};
