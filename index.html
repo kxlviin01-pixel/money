@@ -571,7 +571,7 @@ function rDeudas(){
   <button class="btn ghost" id="addDebt" style="margin-top:14px">+ Nuevo préstamo</button>`;
 }
 function pendForm(p){
-  const ed=!!p;p=p||{person:(S.pending[S.pending.length-1]||{}).person||'',amt:0,note:'',sure:'seguro',date:today()};let sure=p.sure;
+  const ed=!!p;p=p||{person:(S.pending[S.pending.length-1]||{}).person||'',amt:0,note:'',sure:'talvez',date:today()};let sure=p.sure;
   const people=[...new Set(S.pending.map(x=>x.person))];
   open(`<div class="ftitle">${ed?esc(p.person)+' · falta '+fmt(pLeft(p)):'Por cobrar'}</div>
   ${amtIn('pA',ed?p.amt:0)}
