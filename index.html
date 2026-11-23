@@ -13,6 +13,10 @@
 <style>
 :root{color-scheme:dark;accent-color:#3ddc97;--glass:rgba(255,255,255,.045);--glass-b:rgba(255,255,255,.09);--bg:#0b0b0d;--card:#151518;--line:#232328;--ink:#f2f2f4;--mute:#8a8a93;--in:#3ddc97;--out:#ff6b6b;--acc:#3ddc97;--r:16px}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+/* Se siente como app: al dejar el dedo sobre un texto no sale el menú de copiar/buscar */
+html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img,svg{-webkit-user-drag:none;pointer-events:none}
 html{background:var(--bg)}
 html,body{color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
 body{padding:env(safe-area-inset-top) 0 calc(96px + env(safe-area-inset-bottom));min-height:100vh;background:var(--bg)}
@@ -34,6 +38,8 @@ h2{font-size:14px;font-weight:500;color:var(--mute);margin:22px 0 10px}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .list .it{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .list .it:last-child{border:0}
+/* Listas largas: el celular solo dibuja las filas que se ven en pantalla */
+.list .it{content-visibility:auto;contain-intrinsic-size:auto 63px}
 .ic{width:38px;height:38px;border-radius:12px;background:#1e1e22;display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--mute);flex:none}
 .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar{height:6px;background:#222227;border-radius:9px;overflow:hidden;margin-top:8px}
@@ -210,7 +216,12 @@ const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],
 const migrate=d=>{const b=def();for(const k in b)if(d[k]===undefined)d[k]=b[k];return d};
 let S;
 try{S=migrate(JSON.parse(localStorage.getItem(KEY))||def())}catch(e){S=def()}
-const save=()=>{BAL=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('No se pudo guardar')}};
+/* Guardado: la pantalla responde al instante; los datos se escriben un momento después y siempre antes de cerrar la app */
+let VER=0,saveT=0,dirty=false;
+function flush(){if(!dirty)return;dirty=false;clearTimeout(saveT);try{const j=JSON.stringify(S);localStorage.setItem(KEY,j);if(j.length>4e6&&!flush.warned){flush.warned=true;toast("Parce el espacio se está llenando exporta un respaldo")}}catch(e){dirty=true;toast("No se pudo guardar exporta un respaldo")}}
+const save=()=>{BAL=null;IDX=null;VER++;dirty=true;clearTimeout(saveT);saveT=setTimeout(()=>idle(flush),300)};
+addEventListener("visibilitychange",()=>{if(document.hidden)flush()});addEventListener("pagehide",flush);
+navigator.storage?.persist?.().catch(()=>{});
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>(n<0?'−$':'$')+Math.abs(Math.round(n)).toLocaleString('es-CO');
@@ -224,9 +235,16 @@ const accName=id=>(S.accounts.find(a=>a.id===id)||{name:'—'}).name;
 let BAL=null;
 function bal(id){if(!BAL){BAL={};for(const a of S.accounts)BAL[a.id]=a.initial||0;for(const t of S.tx){if(t.type==='in')BAL[t.acc]=(BAL[t.acc]||0)+t.amt;else if(t.type==='out')BAL[t.acc]=(BAL[t.acc]||0)-t.amt;else if(t.type==='tr'){BAL[t.acc]=(BAL[t.acc]||0)-t.amt;BAL[t.to]=(BAL[t.to]||0)+t.amt}}}return BAL[id]||0}
 const total=()=>S.accounts.reduce((s,a)=>s+bal(a.id),0);
-const ofMonth=m=>S.tx.filter(t=>t.date.startsWith(m));
-function sums(m){let i=0,o=0;for(const t of ofMonth(m)){if(t.type==='in')i+=t.amt;if(t.type==='out')o+=t.amt}return{i,o}}
-function byCat(m){const r={};for(const t of ofMonth(m))if(t.type==='out')r[t.cat]=(r[t.cat]||0)+t.amt;return r}
+/* Índice por mes: en vez de recorrer todos los movimientos, va directo al mes que necesita */
+let IDX=null,MEMO={v:-1};
+function idx(){if(!IDX){IDX=new Map();for(const t of S.tx){const m=t.date.slice(0,7);let a=IDX.get(m);if(!a)IDX.set(m,a=[]);a.push(t)}}return IDX}
+const memo=(k,fn)=>{if(MEMO.v!==VER)MEMO={v:VER};return k in MEMO?MEMO[k]:(MEMO[k]=fn())};
+const ofMonth=m=>idx().get(m)||[];
+const monthsDesc=()=>memo("md",()=>[...idx().keys()].sort().reverse());
+/* Los N más recientes sin ordenar todo el historial */
+function recent(n){const out=[];for(const m of monthsDesc()){out.push(...sorted(ofMonth(m)));if(out.length>=n)break}return out.slice(0,n)}
+function sums(m){return memo('s'+m,()=>{let i=0,o=0;for(const t of ofMonth(m)){if(t.type==='in')i+=t.amt;if(t.type==='out')o+=t.amt}return{i,o}})}
+function byCat(m){return memo('c'+m,()=>{const r={};for(const t of ofMonth(m))if(t.type==='out')r[t.cat]=(r[t.cat]||0)+t.amt;return r})}
 const pad=n=>String(n).padStart(2,'0');
 const dim=m=>{const[y,mm]=m.split('-').map(Number);return new Date(y,mm,0).getDate()};
 const recDate=(r,m)=>m+'-'+pad(Math.min(r.day,dim(m)));
@@ -307,7 +325,13 @@ const SALUDO={
   pasado:["Perra ya se pasó del presupuesto","Le voló el presupuesto parce","Presupuesto muerto pilas pues","Qué boleta ya no hay presupuesto","Sumercé se comió el presupuesto"]
 };
 /* Categorías de ingreso: libres; se sugieren las que ya usaste */
-const inCats=()=>[...new Set([...S.tx.filter(t=>t.type==='in').map(t=>t.cat),...S.recurring.filter(r=>r.type==='in').map(r=>r.cat),...CAT_IN].filter(c=>c&&c!==NOCAT))];
+const inCats=()=>memo('inc',()=>[...new Set([...S.tx.filter(t=>t.type==='in').map(t=>t.cat),...S.recurring.filter(r=>r.type==='in').map(r=>r.cat),...CAT_IN].filter(c=>c&&c!==NOCAT))]);
+/* Categoría que usaste la última vez para cada descripción (se arma una sola vez) */
+/* "Lo que noté" se calcula cuando el celular está libre, para que la pantalla responda primero */
+const idle=fn=>(window.requestIdleCallback?requestIdleCallback(fn,{timeout:800}):setTimeout(fn,60));
+function insLater(){const k="ins"+today();if(MEMO.v===VER&&k in MEMO)return MEMO[k];const v=VER;
+  idle(()=>{if(v!==VER)return;memo(k,insights);if(page==="inicio"&&!sheet.classList.contains("show"))rInicio()});return []}
+const catGuess=()=>memo("cg",()=>{const g={};for(const m of [...monthsDesc()].reverse())for(const t of sorted(ofMonth(m)).reverse())if(t.cat&&t.cat!==NOCAT&&t.desc)g[t.type+"|"+t.desc.toLowerCase()]=t.cat;return g});
 const MSG={
   in:["Entró platica","Cayó billete","Llegó el biyuyo","Uy qué chimba entró plata","A la buchaca","Ese camello sí paga","Llegaron las lukas","Ala qué nota entró plata","De una cayó plata","Plata en mano sumercé","Qué chévere llegó billete","Ese billetico"],
   inBig:["Uy cayeron palos","Ese billete está pesado","Qué chimba llegó un palo","Ala sumercé qué billetera"],
@@ -324,7 +348,7 @@ function rInicio(){
   const td=today(),cm=td.slice(0,7),pm=shiftM(cm,-1),dn=+td.slice(8),now=new Date();
   const H=v=>S.hide?'$ •••••':fmt(v);
   const {i,o}=sums(cm), fm=Math.max(i,o,1);
-  const prevO=S.tx.filter(t=>t.type==='out'&&t.date.startsWith(pm)&&+t.date.slice(8)<=dn).reduce((s,t)=>s+t.amt,0);
+  const prevO=ofMonth(pm).reduce((s,t)=>s+(t.type==='out'&&+t.date.slice(8)<=dn?t.amt:0),0);
   const diff=prevO?Math.round((o-prevO)/prevO*100):null;
   const cmp=o===0&&!prevO?'':diff===null?'':diff<=0?`<div class="cmp">Vas gastando <b class="in">${Math.abs(diff)}% menos</b> que el mes pasado a esta fecha</div>`:`<div class="cmp">Vas gastando <b class="out">${diff}% más</b> que el mes pasado a esta fecha</div>`;
   const bc=byCat(cm), cats=Object.entries(bc).sort((a,b)=>b[1]-a[1]), top=cats.slice(0,4), max=cats[0]?cats[0][1]:1;
@@ -336,8 +360,8 @@ function rInicio(){
   const mood=!S.tx.length?'vacio':tl&&tg>tl?'pasado':diff!==null&&diff>20?'malo':diff!==null&&diff<=-10?'bien':(h>=23||h<4)?'noche':'normal';
   const hola=pick(SALUDO[mood]);
   const fecha=now.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
-  const rec=sorted(S.tx).slice(0,5);
-  const nc=S.tx.filter(t=>t.cat===NOCAT).length, ins=insights();
+  const rec=recent(5);
+  const nc=memo('nc',()=>S.tx.reduce((s,t)=>s+(t.cat===NOCAT),0)), ins=insLater();
   const oldBk=S.tx.length&&Date.now()-S.lastBackup>14*864e5;
   $('p-inicio').innerHTML=`
   <div class="row top"><div class="grow"><div class="mute" style="font-size:13px">${fecha[0].toUpperCase()+fecha.slice(1)}</div><div style="font-weight:600;font-size:18px;line-height:1.3">${esc(hola)}</div></div><button class="icb" id="eye" aria-label="${S.hide?'Mostrar':'Ocultar'} saldos">${S.hide?EYE_OFF:EYE}</button></div>
@@ -415,7 +439,7 @@ function rDeudas(){
 let cFrom=shiftM(today().slice(0,7),-2), cTo=today().slice(0,7);
 function rCalc(){
   let a=cFrom,b=cTo;if(a>b)[a,b]=[b,a];
-  const l=S.tx.filter(t=>{const m=t.date.slice(0,7);return m>=a&&m<=b});
+  const l=[];for(let m=a;m<=b;m=shiftM(m,1))l.push(...ofMonth(m));
   let i=0,o=0;const cat={},mon={};
   for(const t of l){const m=t.date.slice(0,7);mon[m]=mon[m]||{i:0,o:0};if(t.type==='in'){i+=t.amt;mon[m].i+=t.amt}if(t.type==='out'){o+=t.amt;mon[m].o+=t.amt;cat[t.cat]=(cat[t.cat]||0)+t.amt}}
   let n=0;for(let m=a;m<=b;m=shiftM(m,1))n++;
@@ -557,7 +581,7 @@ const TYPE_TITLE={out:'Nuevo gasto',in:'Nuevo ingreso',tr:'Transferencia'};
 const TYPE_COLOR={out:'var(--out)',in:'var(--in)',tr:'#6ea8ff'};
 
 function txForm(t,pre){
-  const ed=!!t, lastAcc=(sorted(S.tx).find(x=>x.type!=='tr')||{}).acc;
+  const ed=!!t, lastAcc=(recent(30).find(x=>x.type!=='tr')||{}).acc;
   t=t||{type:pre||'out',amt:'',desc:'',cat:NOCAT,acc:S.accounts.some(a=>a.id===lastAcc)?lastAcc:S.accounts[0]?.id,to:S.accounts.find(a=>a.id!==lastAcc)?.id,date:today(),time:nowTime()};
   let type=t.type, catSet=ed;
   const d=new Date(t.date+'T12:00');
@@ -591,7 +615,7 @@ function txForm(t,pre){
       const desc=$('fDesc').value.trim();
       /* Si no eligió categoría, usa la que puso antes para esa misma descripción */
       let cat=type==='tr'?'':type==='in'?($('fCatIn').value.trim()||NOCAT):$('fCat').value;
-      if(type!=='tr'&&!catSet&&cat===NOCAT&&desc){const p=sorted(S.tx).find(x=>x.type===type&&x.cat&&x.cat!==NOCAT&&x.desc.toLowerCase()===desc.toLowerCase());if(p)cat=p.cat}
+      if(type!=='tr'&&!catSet&&cat===NOCAT&&desc){const p=catGuess()[type+'|'+desc.toLowerCase()];if(p)cat=p}
       const n={id:t.id||uid(),type,amt,desc,cat,acc:$('fAcc').value,to:type==='tr'?$('fTo').value:'',date:$('fDate').value||today(),time:$('fTime').value||''};
       if(type==='tr'&&n.acc===n.to){openMore();return toast('Elige cuentas distintas')}
       if(t.rec)n.rec=t.rec;
@@ -723,7 +747,7 @@ document.querySelector('main').addEventListener('click',e=>{
   const gl=e.target.closest('[data-goal]');if(gl)return goalForm(S.goals.find(x=>x.id===gl.dataset.goal));
   const db=e.target.closest('[data-debt]');if(db)return debtForm(S.debts.find(x=>x.id===db.dataset.debt));
   const rg=e.target.closest('[data-r]');if(rg){const now=today().slice(0,7),r=rg.dataset.r;cTo=now;
-    if(r==='y')cFrom=now.slice(0,4)+'-01';else if(r==='all'){const d=S.tx.map(t=>t.date).sort()[0];cFrom=d?d.slice(0,7):now}else cFrom=shiftM(now,1-Number(r));return rCalc()}
+    if(r==='y')cFrom=now.slice(0,4)+'-01';else if(r==='all'){const ms=monthsDesc();cFrom=ms.length?ms[ms.length-1]:now}else cFrom=shiftM(now,1-Number(r));return rCalc()}
   const f=e.target.closest('[data-f]');if(f){filt=f.dataset.f;return rMov()}
   const mp=e.target.closest('[data-mp]');if(mp)return monthPicker(mp.dataset.mp);
   const sg=e.target.closest('[data-sug]');if(sg)return recForm(null,SUG[sg.dataset.sug]);
