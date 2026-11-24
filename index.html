@@ -189,6 +189,10 @@ html.locked .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top))}
 .crow{gap:8px;margin-bottom:8px}.crow .cin{flex:1;min-width:0}
 .cdel,.cadd{width:48px;height:48px;flex:none;border:1px solid var(--glass-b);border-radius:12px;background:var(--glass);color:var(--mute);font-size:16px}
 .cadd{color:var(--acc);font-size:24px}
+.ceye{width:48px;height:48px;flex:none;border:1px solid var(--glass-b);border-radius:12px;background:var(--glass);color:var(--ink);display:grid;place-items:center}
+.ceye svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.crow.off .cin{opacity:.45}.crow.off .ceye{color:var(--mute);background:none;position:relative}
+.crow.off .ceye::after{content:"";position:absolute;width:24px;height:2px;background:currentColor;transform:rotate(-45deg);border-radius:2px}
 .crow.gone .cin{opacity:.35;text-decoration:line-through}.crow.gone .cdel{color:var(--out);border-color:rgba(255,107,107,.4)}
 .it.bud{cursor:pointer}.it.bud:active{opacity:.6}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
@@ -262,7 +266,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=29; /* súbelo junto con CACHE en sw.js */
+const APP_VER=30; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -274,7 +278,9 @@ const COLORS=['#3ddc97','#6ea8ff','#c792ea','#ffcb6b','#ff6b6b','#5ce1e6'];
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
 const CAT_OUT=['Comida','Transporte','CK','Salidas','Gaming / PC','Tienda LUMMEN','Hogar','Salud','Ropa','Suscripciones','Otros'];
-const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],tx:[],budgets:{},goals:[],debts:[],recurring:[],pending:[],cats:CAT_OUT.slice(),lastBackup:0,hide:false});
+/* Secciones visibles (las ocultas no salen al anotar ni en Presupuesto; sus gastos viejos no se tocan) */
+const catsOn=()=>S.cats.filter(c=>!S.catsOff.includes(c));
+const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],tx:[],budgets:{},goals:[],debts:[],recurring:[],pending:[],cats:CAT_OUT.slice(),catsOff:[],lastBackup:0,hide:false});
 /* Migración: datos viejos no tenían recurring/lastBackup/hide; se agregan sin tocar lo demás */
 const migrate=d=>{const b=def();for(const k in b)if(d[k]===undefined)d[k]=b[k];return d};
 let S;
@@ -560,10 +566,10 @@ function rPres(){
   $('p-pres').innerHTML=`<h1>Presupuesto</h1>
   <div class="card"><div class="mute">Te queda este mes</div><div class="big num ${tl-tg<0?'out':''}">${fmt(tl-tg)}</div><div class="mute">Gastado ${fmt(tg)} de ${fmt(tl)}</div><div class="bar"><i style="width:${tl?Math.min(100,tg/tl*100):0}%;background:${tg>tl?'var(--out)':'var(--acc)'}"></i></div></div>
   <h2 class="row"><span class="grow">Por categoría</span><span class="row" style="gap:14px"><button class="link" id="editCats">Secciones</button><button class="link" id="editB">Límites</button></span></h2>
-  <div class="card list">${S.cats.map(c=>{const v=S.budgets[c]||0,g=bc[c]||0,p=v?g/v*100:0;
+  <div class="card list">${catsOn().map(c=>{const v=S.budgets[c]||0,g=bc[c]||0,p=v?g/v*100:0;
     return v?`<div class="it bud" data-bud="${esc(c)}" style="display:block"><div class="row"><span class="grow t">${esc(c)}</span><span class="num ${p>100?'out':'mute'}">${fmt(g)} / ${fmt(v)}</span></div><div class="bar"><i style="width:${Math.min(100,p)}%;background:${p>100?'var(--out)':p>80?'#ffcb6b':'var(--acc)'}"></i></div>${p>100?`<div class="out" style="font-size:12px;margin-top:4px">Te pasaste por ${fmt(g-v)}</div>`:''}</div>`
     :`<div class="it bud" data-bud="${esc(c)}"><span class="grow t">${esc(c)}</span><span class="mute" style="font-size:13px">${g?fmt(g)+' · ':''}Sin límite</span><span class="link" style="margin-left:10px;padding:0">+ Límite</span></div>`}).join('')}</div>
-  <p class="mute" style="font-size:12px;margin-top:8px">Toca una sección pa' ponerle o cambiarle el límite</p>`;
+  <p class="mute" style="font-size:12px;margin-top:8px">Toca una sección pa' ponerle o cambiarle el límite${S.catsOff.length?' · '+S.catsOff.length+(S.catsOff.length===1?' oculta':' ocultas')+' en Secciones':''}</p>`;
 }
 
 function rMetas(){
@@ -860,7 +866,7 @@ function txForm(t,pre){
       $('trSug').style.display=k==='tr'?'':'none';
       if(k==='tr')openMore();
       $('fCat').style.display=k==='in'?'none':'';$('fCatIn').style.display=k==='in'?'':'none';
-      const list=[NOCAT,...S.cats];$('fCat').innerHTML=opts(list,list.includes(t.cat)?t.cat:NOCAT);$('fAmt').style.color=TYPE_COLOR[k]};
+      const list=[NOCAT,...catsOn(),...(t.cat&&S.catsOff.includes(t.cat)?[t.cat]:[])];$('fCat').innerHTML=opts(list,list.includes(t.cat)?t.cat:NOCAT);$('fAmt').style.color=TYPE_COLOR[k]};
     setT(type);
     $('trSug').onclick=e=>{const b=e.target.closest('[data-tf]');if(!b)return;$('fDesc').value=b.dataset.tf;$('trSug').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b))};
     $('seg').onclick=e=>{const b=e.target.closest('button');b&&setT(b.dataset.t)};
@@ -906,26 +912,27 @@ function accForm(a){
 }
 
 /* Secciones de gastos: renombrar (actualiza gastos, límites y pagos fijos), borrar (pasan a "Sin categoría") y agregar */
+const EYE_SEC='<svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 function catsForm(){
-  const rows=S.cats.map((c,i)=>'<div class="row crow" data-ci="'+i+'"><input class="cin" value="'+esc(c)+'" maxlength="30" data-old="'+esc(c)+'"><button type="button" class="cdel" aria-label="Borrar sección">✕</button></div>').join('');
-  open('<div class="ftitle">Secciones de gastos</div><p class="mute" style="text-align:center;font-size:13px">Toca un nombre pa\' cambiarlo</p><div id="cList" style="margin-top:10px">'+rows+'</div>'+
+  const rows=S.cats.map((c,i)=>'<div class="row crow'+(S.catsOff.includes(c)?' off':'')+'" data-ci="'+i+'"><input class="cin" value="'+esc(c)+'" maxlength="30" data-old="'+esc(c)+'"><button type="button" class="ceye" aria-label="Ocultar o mostrar">'+EYE_SEC+'</button><button type="button" class="cdel" aria-label="Borrar sección">✕</button></div>').join('');
+  open('<div class="ftitle">Secciones de gastos</div><p class="mute" style="text-align:center;font-size:13px">Toca un nombre pa\' cambiarlo · el ojo la oculta sin borrarla</p><div id="cList" style="margin-top:10px">'+rows+'</div>'+
     '<div class="row crow" style="margin-top:12px"><input class="cin" id="cNew" placeholder="Nueva sección" maxlength="30"><button type="button" class="cadd" id="cAdd" aria-label="Agregar">+</button></div>'+
     '<button class="btn" id="cS" style="margin-top:18px">Guardar</button>',()=>{
     const add=()=>{const v=$('cNew').value.trim();if(!v)return need($('cNew'),'¿Cómo se llama?');
-      const d=document.createElement('div');d.className='row crow';d.innerHTML='<input class="cin" maxlength="30" data-old=""><button type="button" class="cdel" aria-label="Borrar sección">✕</button>';d.querySelector('input').value=v;$('cList').appendChild(d);$('cNew').value='';$('cNew').focus()};
+      const d=document.createElement('div');d.className='row crow';d.innerHTML='<input class="cin" maxlength="30" data-old=""><button type="button" class="ceye" aria-label="Ocultar o mostrar">'+EYE_SEC+'</button><button type="button" class="cdel" aria-label="Borrar sección">✕</button>';d.querySelector('input').value=v;$('cList').appendChild(d);$('cNew').value='';$('cNew').focus()};
     $('cAdd').onclick=add;$('cNew').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();add()}};
-    $('cList').onclick=e=>{const b=e.target.closest('.cdel');if(b)b.parentNode.classList.toggle('gone')};
+    $('cList').onclick=e=>{const b=e.target.closest('.cdel');if(b)b.parentNode.classList.toggle('gone');const y=e.target.closest('.ceye');if(y)y.parentNode.classList.toggle('off')};
     $('cS').onclick=()=>{
-      const rowsEl=[...$('cList').children],keep=[],ren={},del=[];
+      const rowsEl=[...$('cList').children],keep=[],ren={},del=[],off=[];
       for(const r of rowsEl){const inp=r.querySelector('input'),old=inp.dataset.old,v=inp.value.trim();
         if(r.classList.contains('gone')||!v){if(old)del.push(old);continue}
-        if(keep.includes(v))continue;keep.push(v);if(old&&old!==v)ren[old]=v}
-      if(!keep.length)return toast('Deje al menos una sección');
+        if(keep.includes(v))continue;keep.push(v);if(r.classList.contains('off'))off.push(v);if(old&&old!==v)ren[old]=v}
+      if(!keep.length)return toast('Deje al menos una sección');if(off.length===keep.length)return toast('Deje al menos una sección visible');
       const apply=()=>{
         for(const t of S.tx){if(t.type!=='out')continue;if(ren[t.cat]){t.cat=ren[t.cat];touch(t.date)}else if(del.includes(t.cat)){t.cat=NOCAT;touch(t.date)}}
         for(const r of S.recurring){if(r.type!=='out')continue;if(ren[r.cat])r.cat=ren[r.cat];else if(del.includes(r.cat))r.cat=NOCAT}
         const b={};for(const[c,v]of Object.entries(S.budgets)){if(ren[c])b[ren[c]]=v;else if(!del.includes(c))b[c]=v}S.budgets=b;
-        S.cats=keep;save();close();later(render);toast(say('edited'))};
+        S.cats=keep;S.catsOff=off;save();close();later(render);toast(say('edited'))};
       const n=del.length?S.tx.filter(t=>t.type==='out'&&del.includes(t.cat)).length:0;
       if(n)ask('Vas a borrar '+del.join(' y ')+'. '+n+' '+(n===1?'gasto queda':'gastos quedan')+' como Sin categoría. ¿Seguir?','Borrar',apply);else apply()};
   });
@@ -942,9 +949,9 @@ function budOne(c){
 }
 function budgetForm(){
   open(`<div class="ftitle">Límites del mes</div><p class="mute" style="text-align:center">Deja vacío lo que no quieras controlar</p>
-  ${S.cats.map((c,i)=>`<label>${esc(c)}</label><input inputmode="numeric" data-b="${i}" placeholder="Sin límite" value="${S.budgets[c]?nf(S.budgets[c]):''}">`).join('')}
+  ${catsOn().map((c,i)=>`<label>${esc(c)}</label><input inputmode="numeric" data-b="${i}" placeholder="Sin límite" value="${S.budgets[c]?nf(S.budgets[c]):''}">`).join('')}
   <button class="btn" id="bS" style="margin-top:18px">Guardar</button>`,()=>{
-    $('bS').onclick=()=>{panel.querySelectorAll('[data-b]').forEach(el=>{const c=S.cats[el.dataset.b],v=num(el.value);if(v)S.budgets[c]=v;else delete S.budgets[c]});save();close();later(render);toast(say('saved'))};
+    $('bS').onclick=()=>{panel.querySelectorAll('[data-b]').forEach(el=>{const c=catsOn()[el.dataset.b],v=num(el.value);if(v)S.budgets[c]=v;else delete S.budgets[c]});save();close();later(render);toast(say('saved'))};
   });
 }
 
@@ -1001,7 +1008,7 @@ function recForm(r,pre){
   <label>Cuenta</label><select id="rAcc">${accOpts(r.acc)}</select>
   <p class="mute" style="margin-top:8px">Si el mes tiene menos días, se anota el último día.</p>`,ed?(r.type==='in'?'Ingreso':'Gasto')+' · '+esc(r.cat||NOCAT)+' · '+esc(accName(r.acc)):'Más detalles')}
   <button class="btn" id="rS" style="margin-top:18px">Guardar</button>${ed?'<button class="btn del" id="rDel">Eliminar pago fijo</button>':''}`,()=>{
-    const setT=k=>{type=k;$('rSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$('rC').style.display=k==='in'?'none':'';$('rCIn').style.display='none';$('rCL').style.display=k==='in'?'none':'';$('rC').innerHTML=opts(S.cats,S.cats.includes(r.cat)?r.cat:S.cats[0]);$('rA').style.color=TYPE_COLOR[k]};
+    const setT=k=>{type=k;$('rSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===k));$('rC').style.display=k==='in'?'none':'';$('rCIn').style.display='none';$('rCL').style.display=k==='in'?'none':'';{const L=[...catsOn(),...(r.cat&&S.catsOff.includes(r.cat)?[r.cat]:[])];$('rC').innerHTML=opts(L,L.includes(r.cat)?r.cat:L[0])}$('rA').style.color=TYPE_COLOR[k]};
     setT(type);$('rSeg').onclick=e=>{const b=e.target.closest('button');b&&setT(b.dataset.t)};
     $('rS').onclick=()=>{const desc=$('rN').value.trim(),amt=num($('rA').value),day=Math.min(31,Math.max(1,num($('rD').value)));
       if(!amt)return need($('rA'),'¿Cuánto?');if(!desc)return need($('rN'),'¿Qué pago es?');if(!S.accounts.length)return toast('Primero crea una cuenta');
