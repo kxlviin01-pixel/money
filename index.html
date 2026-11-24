@@ -159,7 +159,8 @@ main .chip.on{background:var(--ink);border-color:var(--ink)}
 /* Fondo quieto mientras hay un panel abierto (liviano, sin mover la página) */
 html.locked,html.locked body{overflow:hidden;overscroll-behavior:none}
 /* Modo liviano (gama baja): mismo diseño, sin efectos caros */
-.lite body::before{background:linear-gradient(170deg,rgba(61,220,151,.09),transparent 40%,rgba(110,168,255,.05) 80%,transparent)}
+.lite body::before{display:none}
+.lite body{background:linear-gradient(170deg,rgba(61,220,151,.08),transparent 420px) var(--bg)}
 .lite nav,.lite .dbox,.lite .toast{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .lite nav{background:rgba(24,24,28,.97)}.lite .dbox{background:#1a1a1e}
 .lite .toast{background:#17241e}.lite .toast.out{background:#2a1818}.lite .toast.tr{background:#16202e}.lite .toast:not(.in):not(.out):not(.tr){background:#222226}
@@ -266,7 +267,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=30; /* súbelo junto con CACHE en sw.js */
+const APP_VER=31; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1086,7 +1087,13 @@ if('serviceWorker' in navigator&&location.protocol!=='file:'&&location.hostname!
   const hadSW=!!navigator.serviceWorker.controller;let reloading=false;
   const reloadNow=()=>{if(reloading)return;if(sheet.classList.contains('show')||$('dlg').classList.contains('show')){setTimeout(reloadNow,1500);return}reloading=true;flush();location.reload()};
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadSW)reloadNow()});
-  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update().catch(()=>{})})}).catch(()=>{});
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{
+    let busy=false;
+    const check=async()=>{if(busy||!navigator.onLine)return;busy=true;
+      try{const t=await (await fetch('sw.js?v='+Date.now(),{cache:'no-store'})).text();const n=+(t.match(/money-v(\d+)/)||[])[1];
+        if(n>APP_VER){await fetch('./index.html',{cache:'no-store'});r.update().catch(()=>{});reloadNow()}}catch(e){}busy=false};
+    idle(check);document.addEventListener('visibilitychange',()=>{if(!document.hidden)idle(check)});
+  }).catch(()=>{});
 }
 }
 </script>

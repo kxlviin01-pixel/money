@@ -1,5 +1,5 @@
 // Cache de la app para que abra sin internet. Sube la versión al cambiar archivos.
-const CACHE = 'money-v30';
+const CACHE = 'money-v31';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 // Al instalar se descarga todo directo del servidor (cache:'reload'): nunca se guarda una copia vieja
@@ -13,27 +13,33 @@ self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
+async function fresh(req) {
+  const res = await fetch(req, { cache: 'no-store' });
+  if (res && res.ok) (await caches.open(CACHE)).put('./index.html', res.clone());
+  return res;
+}
+
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
-  const isPage = req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
 
-  // La app (página): con internet SIEMPRE la versión más nueva; sin internet (o si tarda mucho), la guardada
+  // sw.js siempre del servidor (la app lo usa para saber si hay versión nueva)
+  if (url.pathname.endsWith('/sw.js')) { e.respondWith(fetch(req, { cache: 'no-store' })); return; }
+
+  const isPage = req.mode === 'navigate' || url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
   if (isPage) {
-    e.respondWith((async () => {
-      const cache = await caches.open(CACHE);
-      try {
-        const res = await Promise.race([
-          fetch(req, { cache: 'no-store' }),
-          new Promise((_, rej) => setTimeout(() => rej(new Error('lento')), 4000))
-        ]);
-        if (res && res.ok) cache.put('./index.html', res.clone());
-        return res;
-      } catch (err) {
-        return (await cache.match('./index.html')) || (await cache.match('./')) || Response.error();
-      }
-    })());
+    // Abrir la app: al instante con la copia guardada (sin esperar internet) y se actualiza por detrás
+    if (req.mode === 'navigate') {
+      e.respondWith((async () => {
+        const hit = (await caches.match('./index.html')) || (await caches.match('./'));
+        if (hit) { e.waitUntil(fresh(req).catch(() => {})); return hit; }
+        try { return await fresh(req); } catch (err) { return Response.error(); }
+      })());
+      return;
+    }
+    // Pedido de la propia app para bajar la versión nueva: directo del servidor
+    e.respondWith(fresh(req).catch(() => caches.match('./index.html')));
     return;
   }
 
