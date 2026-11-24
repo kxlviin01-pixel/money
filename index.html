@@ -196,6 +196,9 @@ html.locked .toast{bottom:auto;top:calc(14px + env(safe-area-inset-top))}
 .crow.off .ceye::after{content:"";position:absolute;width:24px;height:2px;background:currentColor;transform:rotate(-45deg);border-radius:2px}
 .crow.gone .cin{opacity:.35;text-decoration:line-through}.crow.gone .cdel{color:var(--out);border-color:rgba(255,107,107,.4)}
 .it.bud{cursor:pointer}.it.bud:active{opacity:.6}
+.catchips{display:flex;gap:6px;overflow-x:auto;margin:8px -18px 0;padding:2px 18px 4px;scrollbar-width:none;overscroll-behavior-x:contain;touch-action:pan-x}
+.catchips::-webkit-scrollbar{display:none}
+.catchips .chip{flex:none;padding:8px 13px;font-size:13px;color:var(--ink)}
 .ftitle{text-align:center;color:var(--mute);font-size:14px;margin-bottom:2px}
 input.main{margin-top:10px;text-align:center;border-color:transparent;background:#1b1b1f}
 .more{width:100%;margin-top:12px;background:none;border:1px solid var(--line);border-radius:12px;color:var(--mute);padding:12px 14px;display:flex;gap:10px;font-size:14px;text-align:left;min-height:48px;align-items:center}
@@ -267,7 +270,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=31; /* súbelo junto con CACHE en sw.js */
+const APP_VER=32; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -700,10 +703,10 @@ function close(){sheet.classList.remove('show');panel.style.transform='';sheet.s
 sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
 panel.addEventListener('focusin',e=>{if(e.target.matches('input,textarea')&&!e.target.classList.contains('npin')){panel.querySelectorAll('.amtw.active').forEach(w=>w._hide());hideSmall()}});
 /* Arrastrar la hoja con el dedo: hacia abajo se cierra, si la sueltas antes vuelve a su sitio */
-{let sy=null,dy=0,t0=0,dragging=false;
+{let sy=null,sx=0,dy=0,t0=0,dragging=false;
   const innerScroll=t=>{for(let el=t;el&&el!==panel;el=el.parentElement){if(el.scrollHeight>el.clientHeight+1){const o=getComputedStyle(el).overflowY;if(o==='auto'||o==='scroll')return el}}return null};
-  panel.addEventListener('touchstart',e=>{sy=null;if(panel.scrollTop>2&&!e.target.closest('.grab'))return;const sc=innerScroll(e.target);if(sc&&sc.scrollTop>0)return;sy=e.touches[0].clientY;dy=0;t0=Date.now();dragging=false},{passive:true});
-  panel.addEventListener('touchmove',e=>{if(sy===null)return;dy=e.touches[0].clientY-sy;
+  panel.addEventListener('touchstart',e=>{sy=null;if(panel.scrollTop>2&&!e.target.closest('.grab'))return;const sc=innerScroll(e.target);if(sc&&sc.scrollTop>0)return;sy=e.touches[0].clientY;sx=e.touches[0].clientX;dy=0;t0=Date.now();dragging=false},{passive:true});
+  panel.addEventListener('touchmove',e=>{if(sy===null)return;dy=e.touches[0].clientY-sy;if(!dragging&&Math.abs(e.touches[0].clientX-sx)>Math.abs(dy)){sy=null;return}
     if(!dragging){if(dy<=0){if(dy<-6)sy=null;return}if(panel.scrollTop>2&&!e.target.closest('.grab')){sy=null;return}
       if(e.cancelable)e.preventDefault();if(dy<6)return;dragging=true;panel.classList.add('drag');document.activeElement?.blur?.()}
     if(e.cancelable)e.preventDefault();const d=Math.max(0,dy),h=panel.offsetHeight;
@@ -783,7 +786,7 @@ function fancyList(inp){
   box.onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;inp.value=b.dataset.s;fire(inp,'input');draw()};draw();
 }
 function enhance(root){
-  root.querySelectorAll('select').forEach(fancySelect);
+  root.querySelectorAll('select:not([data-plain])').forEach(fancySelect);
   root.querySelectorAll('input[type=date]').forEach(fancyDate);
   root.querySelectorAll('input[type=time]').forEach(fancyTime);
   root.querySelectorAll('input[data-dayof]').forEach(fancyDay);
@@ -848,10 +851,10 @@ function txForm(t,pre){
   open(`<div class="ftitle" id="fTitle">${ed?'Editar movimiento':TYPE_TITLE[type]}</div>
   ${amtIn('fAmt',t.amt,TYPE_COLOR[type])}
   <input class="main" id="fDesc" placeholder="¿En qué?" value="${esc(t.desc)}" maxlength="60" enterkeyhint="done">
+  <div id="fCatW"><div class="catchips" id="fCatC"></div><select id="fCat" data-plain hidden></select><input id="fCatIn" type="hidden"></div>
   <div class="chips sug" id="trSug" style="display:none;justify-content:center">${TR_FOR.map(x=>`<button type="button" class="chip" data-tf="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   ${moreBox(`
   <div class="seg" id="seg" style="margin-top:14px">${[['out','Gasto'],['in','Ingreso'],['tr','Transferir']].map(([k,v])=>`<button data-t="${k}" class="${type===k?'on':''}">${v}</button>`).join('')}</div>
-  <div id="fCatW"><label>Categoría</label><select id="fCat"></select><input id="fCatIn" list="inCats" placeholder="¿De dónde salió?" maxlength="40" value="${t.type==='in'&&t.cat!==NOCAT?esc(t.cat):''}"><datalist id="inCats">${inCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></div>
   <label id="lAcc">Cuenta</label><select id="fAcc">${accOpts(t.acc)}</select>
   <div id="fToW"><label>Hacia</label><select id="fTo">${accOpts(t.to)}</select></div>
   <label>Fecha</label><input type="date" id="fDate" value="${t.date}"><label>Hora</label><input type="time" id="fTime" value="${t.time||''}">
@@ -867,11 +870,17 @@ function txForm(t,pre){
       $('trSug').style.display=k==='tr'?'':'none';
       if(k==='tr')openMore();
       $('fCat').style.display=k==='in'?'none':'';$('fCatIn').style.display=k==='in'?'':'none';
-      const list=[NOCAT,...catsOn(),...(t.cat&&S.catsOff.includes(t.cat)?[t.cat]:[])];$('fCat').innerHTML=opts(list,list.includes(t.cat)?t.cat:NOCAT);$('fAmt').style.color=TYPE_COLOR[k]};
+      const list=[NOCAT,...catsOn(),...(t.cat&&S.catsOff.includes(t.cat)?[t.cat]:[])];$('fCat').innerHTML=opts(list,list.includes(t.cat)?t.cat:NOCAT);
+      $('fCatC').innerHTML=list.slice(1).map(c=>'<button type="button" class="chip'+(c===$('fCat').value?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'</button>').join('');$('fAmt').style.color=TYPE_COLOR[k]};
     setT(type);
     $('trSug').onclick=e=>{const b=e.target.closest('[data-tf]');if(!b)return;$('fDesc').value=b.dataset.tf;$('trSug').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b))};
     $('seg').onclick=e=>{const b=e.target.closest('button');b&&setT(b.dataset.t)};
-    $('fCat').onchange=()=>catSet=true;$('fCatIn').oninput=()=>catSet=true;
+    const markCat=()=>{const v=$('fCat').value;$('fCatC').querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.c===v))};
+    $('fCat').onchange=()=>{catSet=true;markCat()};
+    /* tocar una categoría la escoge; tocarla otra vez la quita */
+    $('fCatC').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;$('fCat').value=b.classList.contains('on')?NOCAT:b.dataset.c;catSet=true;markCat()};
+    /* mientras escribes ¿En qué? se marca sola la categoría que usaste antes con esa palabra */
+    $('fDesc').addEventListener('input',()=>{if(catSet||type!=='out')return;const g=catGuess()['out|'+$('fDesc').value.trim().toLowerCase()];$('fCat').value=g||NOCAT;markCat()});
     
     $('fSave').onclick=()=>{
       const amt=num($('fAmt').value);if(!amt)return need($('fAmt'),'¿Cuánto?');

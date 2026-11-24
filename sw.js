@@ -1,5 +1,5 @@
 // Cache de la app para que abra sin internet. Sube la versión al cambiar archivos.
-const CACHE = 'money-v31';
+const CACHE = 'money-v32';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 // Al instalar se descarga todo directo del servidor (cache:'reload'): nunca se guarda una copia vieja
