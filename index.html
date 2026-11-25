@@ -270,7 +270,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=32; /* súbelo junto con CACHE en sw.js */
+const APP_VER=33; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -284,6 +284,7 @@ const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOff
 const CAT_OUT=['Comida','Transporte','CK','Salidas','Gaming / PC','Tienda LUMMEN','Hogar','Salud','Ropa','Suscripciones','Otros'];
 /* Secciones visibles (las ocultas no salen al anotar ni en Presupuesto; sus gastos viejos no se tocan) */
 const catsOn=()=>S.cats.filter(c=>!S.catsOff.includes(c));
+const budsOn=()=>catsOn().filter(c=>S.budgets[c]>0).map(c=>[c,S.budgets[c]]);
 const def=()=>({accounts:[{id:'efe',name:'Efectivo',color:COLORS[0],initial:0}],tx:[],budgets:{},goals:[],debts:[],recurring:[],pending:[],cats:CAT_OUT.slice(),catsOff:[],lastBackup:0,hide:false});
 /* Migración: datos viejos no tenían recurring/lastBackup/hide; se agregan sin tocar lo demás */
 const migrate=d=>{const b=def();for(const k in b)if(d[k]===undefined)d[k]=b[k];return d};
@@ -502,7 +503,7 @@ function rInicio(){
   const bc=byCat(cm), cats=Object.entries(bc).sort((a,b)=>b[1]-a[1]), top=cats.slice(0,4), max=cats[0]?cats[0][1]:1;
   const up=upcoming(), soon=up.slice(0,4);
   const pend=up.filter(u=>u.date.startsWith(cm)).reduce((s,u)=>s+(u.r.type==='in'?u.r.amt:-u.r.amt),0);
-  const set=Object.entries(S.budgets).filter(([,v])=>v>0), tl=set.reduce((s,[,v])=>s+v,0), tg=set.reduce((s,[c])=>s+(bc[c]||0),0);
+  const set=budsOn(), tl=set.reduce((s,[,v])=>s+v,0), tg=set.reduce((s,[c])=>s+(bc[c]||0),0);
   const left=dim(cm)-dn+1, perDay=Math.max(0,tl-tg)/left;
   const h=now.getHours();
   const mood=!S.tx.length?'vacio':tl&&tg>tl?'pasado':diff!==null&&diff>20?'malo':diff!==null&&diff<=-10?'bien':(h>=23||h<4)?'noche':'normal';
@@ -565,14 +566,14 @@ function rMov(){
 }
 
 function rPres(){
-  const bc=byCat(month); const set=Object.entries(S.budgets).filter(([,v])=>v>0);
+  const bc=byCat(month); const set=budsOn();
   const tl=set.reduce((s,[,v])=>s+v,0), tg=set.reduce((s,[c])=>s+(bc[c]||0),0);
   $('p-pres').innerHTML=`<h1>Presupuesto</h1>
   <div class="card"><div class="mute">Te queda este mes</div><div class="big num ${tl-tg<0?'out':''}">${fmt(tl-tg)}</div><div class="mute">Gastado ${fmt(tg)} de ${fmt(tl)}</div><div class="bar"><i style="width:${tl?Math.min(100,tg/tl*100):0}%;background:${tg>tl?'var(--out)':'var(--acc)'}"></i></div></div>
   <h2 class="row"><span class="grow">Por categoría</span><span class="row" style="gap:14px"><button class="link" id="editCats">Secciones</button><button class="link" id="editB">Límites</button></span></h2>
   <div class="card list">${catsOn().map(c=>{const v=S.budgets[c]||0,g=bc[c]||0,p=v?g/v*100:0;
     return v?`<div class="it bud" data-bud="${esc(c)}" style="display:block"><div class="row"><span class="grow t">${esc(c)}</span><span class="num ${p>100?'out':'mute'}">${fmt(g)} / ${fmt(v)}</span></div><div class="bar"><i style="width:${Math.min(100,p)}%;background:${p>100?'var(--out)':p>80?'#ffcb6b':'var(--acc)'}"></i></div>${p>100?`<div class="out" style="font-size:12px;margin-top:4px">Te pasaste por ${fmt(g-v)}</div>`:''}</div>`
-    :`<div class="it bud" data-bud="${esc(c)}"><span class="grow t">${esc(c)}</span><span class="mute" style="font-size:13px">${g?fmt(g)+' · ':''}Sin límite</span><span class="link" style="margin-left:10px;padding:0">+ Límite</span></div>`}).join('')}</div>
+    :`<div class="it bud" data-bud="${esc(c)}"><span class="grow t">${esc(c)}</span><span class="mute" style="font-size:13px">${g?fmt(g)+' · ':''}Sin límite</span><span class="link" style="margin-left:10px;padding:0">+ Límite</span></div>`}).join('')||'<div class="it"><span class="mute">Todas las secciones están ocultas · ábrelas en Secciones</span></div>'}</div>
   <p class="mute" style="font-size:12px;margin-top:8px">Toca una sección pa' ponerle o cambiarle el límite${S.catsOff.length?' · '+S.catsOff.length+(S.catsOff.length===1?' oculta':' ocultas')+' en Secciones':''}</p>`;
 }
 
@@ -937,11 +938,11 @@ function catsForm(){
       for(const r of rowsEl){const inp=r.querySelector('input'),old=inp.dataset.old,v=inp.value.trim();
         if(r.classList.contains('gone')||!v){if(old)del.push(old);continue}
         if(keep.includes(v))continue;keep.push(v);if(r.classList.contains('off'))off.push(v);if(old&&old!==v)ren[old]=v}
-      if(!keep.length)return toast('Deje al menos una sección');if(off.length===keep.length)return toast('Deje al menos una sección visible');
+      if(!keep.length)return toast('Deje al menos una sección');
       const apply=()=>{
         for(const t of S.tx){if(t.type!=='out')continue;if(ren[t.cat]){t.cat=ren[t.cat];touch(t.date)}else if(del.includes(t.cat)){t.cat=NOCAT;touch(t.date)}}
         for(const r of S.recurring){if(r.type!=='out')continue;if(ren[r.cat])r.cat=ren[r.cat];else if(del.includes(r.cat))r.cat=NOCAT}
-        const b={};for(const[c,v]of Object.entries(S.budgets)){if(ren[c])b[ren[c]]=v;else if(!del.includes(c))b[c]=v}S.budgets=b;
+        const b={};for(const[c,v]of Object.entries(S.budgets)){const k=ren[c]||c;if(!del.includes(c)&&keep.includes(k)&&!off.includes(k))b[k]=v}S.budgets=b;
         S.cats=keep;S.catsOff=off;save();close();later(render);toast(say('edited'))};
       const n=del.length?S.tx.filter(t=>t.type==='out'&&del.includes(t.cat)).length:0;
       if(n)ask('Vas a borrar '+del.join(' y ')+'. '+n+' '+(n===1?'gasto queda':'gastos quedan')+' como Sin categoría. ¿Seguir?','Borrar',apply);else apply()};
