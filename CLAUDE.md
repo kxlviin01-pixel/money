@@ -21,7 +21,7 @@ Inicio (saldo con ojo para ocultar, flujo del mes vs mes pasado, accesos rápido
 - Monto grande (`amtIn`/`amtLive`/`numPad`): teclado de números propio de la app (1-9, 000, 0, ⌫; mantener ⌫ borra todo), sin teclado del sistema. El valor va en un input oculto y se muestra con comas en `.amtv`. Sale solo si el monto está vacío; se esconde al enfocar otro campo. Los campos de plata pequeños (límites, meta total) usan `smallPad`: mismo teclado de la app, aparece debajo del campo tocado; nunca el teclado del sistema.
 - Actualizaciones: `sw.js` abre la app al instante con la copia guardada (no espera internet) y la refresca por detrás. La página mira `sw.js` en idle: si su `money-vN` es mayor que `APP_VER`, baja la versión nueva y se recarga sola (espera si hay un panel abierto). Subir SIEMPRE `CACHE` y `APP_VER` juntos.
 - Gasto: categorías como botoncitos debajo de "¿En qué?" (`#fCatC`, fila que se desliza de lado); se marcan solas según la descripción (`catGuess`). El arrastre del panel ignora gestos de lado.
-- Avisos sin comas y variados (`OK`/`say()`, `MSG`/`moneyMsg()`). Si falta un dato se usa `need()`: pide solo ese campo, lo enfoca y lo sacude. Enter en el panel va al siguiente campo vacío o guarda.
+- Avisos sin comas y variados (`OK`/`say()`, `MSG`/`moneyMsg()`). Si falta un dato se usa `need()`: pide solo ese campo, lo enfoca y lo sacude. Enter en el panel va al siguiente campo vacío o guarda. Al escribir en un campo de texto del panel, este sube y queda centrado arriba del teclado (focusin + visualViewport).
 - Sin frameworks ni librerías externas (debe abrir sin internet).
 - No cambiar el formato de datos sin migrar lo que ya existe en `localStorage`.
 

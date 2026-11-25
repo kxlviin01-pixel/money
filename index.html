@@ -270,7 +270,7 @@ nav button:active svg{transform:scale(.88)}
 <script>
 {
 const KEY='money-v1';
-const APP_VER=33; /* súbelo junto con CACHE en sw.js */
+const APP_VER=34; /* súbelo junto con CACHE en sw.js */
 const NF=new Intl.NumberFormat('en-US'),nf=n=>NF.format(n);
 /* Modo liviano automático para celulares con poca memoria o pocos núcleos: sin desenfoques, sombras ni brillos */
 const LITE=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4)||matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -703,6 +703,11 @@ const later=fn=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(f
 function close(){sheet.classList.remove('show');panel.style.transform='';sheet.style.background='';document.activeElement?.blur?.();setTimeout(unlockBg,0)}
 sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
 panel.addEventListener('focusin',e=>{if(e.target.matches('input,textarea')&&!e.target.classList.contains('npin')){panel.querySelectorAll('.amtw.active').forEach(w=>w._hide());hideSmall()}});
+/* Al escribir (nota, nombre...) el campo sube y queda arribita del teclado */
+{let kf=null;const lift=()=>{if(kf&&document.activeElement===kf)kf.scrollIntoView({block:'center'})};
+panel.addEventListener('focusin',e=>{const t=e.target;if(!t.matches('textarea,input:not([readonly]):not([type=hidden])')||t.classList.contains('npin')||t.inputMode==='none')return;kf=t;setTimeout(lift,350)});
+panel.addEventListener('focusout',()=>{kf=null});
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>{if(kf)requestAnimationFrame(lift)})}
 /* Arrastrar la hoja con el dedo: hacia abajo se cierra, si la sueltas antes vuelve a su sitio */
 {let sy=null,sx=0,dy=0,t0=0,dragging=false;
   const innerScroll=t=>{for(let el=t;el&&el!==panel;el=el.parentElement){if(el.scrollHeight>el.clientHeight+1){const o=getComputedStyle(el).overflowY;if(o==='auto'||o==='scroll')return el}}return null};
